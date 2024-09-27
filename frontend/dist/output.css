@@ -1,0 +1,125 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+a.text-white:hover {
+  color: #f8c145 !important;
+  /* Adjust this color to match your theme */
+}
+
+button.btn-danger:hover {
+  background-color: #c82333 !important;
+  /* Darker shade of red */
+}
+
+header a.text-white {
+  transition: color 0.3s ease-in-out;
+}
+
+footer a.text-white {
+  transition: color 0.3s ease-in-out;
+}
+
+.emergency-contact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px;
+  border-radius: 10px;
+  background-color: #ffefc5;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.emergency-contact:hover {
+  background-color: #ffd700;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.emergency-icon {
+  color: #d9534f;
+  /* Red color for the phone icon */
+}
+
+.emergency-details {
+  text-align: left;
+}
+
+.emergency-title {
+  font-weight: bold;
+  color: #d9534f;
+  /* Bright red for the emergency contact title */
+  font-size: 1.2em;
+  margin-bottom: 0;
+}
+
+.emergency-number {
+  font-size: 1.5em;
+  color: #5bc0de;
+  /* Highlight the phone number with a blue color */
+  margin-top: 0;
+}
+
+/* Additional styling for a modern look */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h2 {
+  color: #333;
+  font-weight: 700;
+}
+
+p {
+  color: #555;
+}
+
+button.btn-danger {
+  background-color: #ff5c5c;
+  border: none;
+  color: white;
+}
+
+button.btn-danger:hover {
+  background-color: #e60000;
+  color: white;
+}
+
+/* Animation for the entry screen */
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.entry-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeOut 3s forwards;
+  animation-delay: 3s;
+}
+
+.entry-screen.hidden {
+  display: none;
+}
+
+.entry-screen h1 {
+  color: white;
+  font-size: 2.5rem;
+}

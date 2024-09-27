@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Styles */
+body {
+  @apply font-sans; /* Use Tailwind's utility class for the font */
+}
+
+a.text-white:hover {
+  @apply text-yellow-500; /* Use Tailwind's text color utility */
+}
+
+button.btn-danger:hover {
+  @apply bg-red-700; /* Use Tailwind's background color utility */
+}
+
+header a.text-white, footer a.text-white {
+  @apply transition-colors duration-300 ease-in-out; /* Use Tailwind's transition utility */
+}
+
+.emergency-contact {
+  @apply flex items-center justify-center gap-2.5 p-4 rounded-lg bg-yellow-100 shadow-md; /* Tailwind utility classes */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.emergency-contact:hover {
+  @apply bg-yellow-400 shadow-lg; /* Tailwind's utility classes for hover state */
+}
+
+.emergency-icon {
+  @apply text-red-600; /* Use Tailwind's text color utility */
+}
+
+.emergency-details {
+  @apply text-left; /* Tailwind's text alignment utility */
+}
+
+.emergency-title {
+  @apply font-bold text-red-600 text-lg mb-0; /* Use Tailwind's utility classes for font weight, color, size, and margin */
+}
+
+.emergency-number {
+  @apply text-2xl text-cyan-400 mt-0; /* Tailwind's utility classes for text size, color, and margin */
+}
+
+.container {
+  @apply max-w-screen-xl mx-auto; /* Tailwind's container max-width and margin auto for centering */
+}
+
+h2 {
+  @apply text-gray-800 font-bold; /* Use Tailwind's utility classes for text color and weight */
+}
+
+p {
+  @apply text-gray-700; /* Use Tailwind's utility class for text color */
+}
+
+button.btn-danger {
+  @apply bg-red-500 text-white border-none; /* Tailwind utility classes */
+}
+
+button.btn-danger:hover {
+  @apply bg-red-700 text-white; /* Tailwind's hover utility classes */
+}
+
+/* Animation for the entry screen */
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.entry-screen {
+  @apply fixed top-0 left-0 w-full h-full bg-gray-800 flex items-center justify-center z-50; /* Tailwind's utility classes for positioning, flexbox, and z-index */
+  animation: fadeOut 3s forwards;
+  animation-delay: 3s;
+}
+
+/* Directly setting display: none for the hidden class */
+.entry-screen.hidden {
+  display: none; /* Directly use CSS display property */
+}
+
+.entry-screen h1 {
+  @apply text-white text-2xl; /* Use Tailwind's text color and size utilities */
+}
