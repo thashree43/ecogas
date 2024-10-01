@@ -1,16 +1,17 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
-import Lottie from 'react-lottie';
-import fuelAnimation from '../../Animation/Animation - 1725986382181 (1).json'; // Path to your Lottie animation JSON file
+import { useState, ChangeEvent, FormEvent } from "react";
+import Lottie from "react-lottie";
+import fuelAnimation from "../../Animation/Animation - 1725986382181 (1).json"; // Path to your Lottie animation JSON file
 import { validateInput, hasFormErrors } from "../../validationpages/validation";
 import { useAgentapplyMutation } from "../../store/slice/Brokerslice";
-import { Link, useNavigate } from 'react-router-dom';
-
+import { Link, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 interface FormData {
   username: string;
   email: string;
   mobile: string;
   password: string;
-  profileImage?: File; 
+  profileImage?: File;
   pincode: string;
 }
 
@@ -25,17 +26,18 @@ interface FormErrors {
 
 const RegisterForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
-    username: '',
-    email: '',
-    mobile: '',
-    password: '',
+    username: "",
+    email: "",
+    mobile: "",
+    password: "",
     profileImage: undefined,
-    pincode: '', 
+    pincode: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [serverError, setServerError] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [serverError, setServerError] = useState<string>("");
   const [agentapply] = useAgentapplyMutation();
   const navigate = useNavigate();
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -46,48 +48,53 @@ const RegisterForm: React.FC = () => {
   };
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]; 
-    const error = validateInput('profileImage', file);
-    
+    const file = e.target.files?.[0];
+    const error = validateInput("profileImage", file);
+
     if (file && file.size > 5 * 1024 * 1024) {
-      setErrors({ ...errors, profileImage: 'File size exceeds 5MB limit.' });
+      setErrors({ ...errors, profileImage: "File size exceeds 5MB limit." });
     } else if (error) {
       setErrors({ ...errors, profileImage: error });
     } else {
       setFormData({ ...formData, profileImage: file });
-      setErrors({ ...errors, profileImage: '' });
+      setErrors({ ...errors, profileImage: "" });
     }
   };
-  
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-  
+
     for (const field in formData) {
-      const value = formData[field as keyof Omit<FormData, 'profileImage'>] as string;
-      const error = validateInput(field, field === 'profileImage' ? formData.profileImage : value);
+      const value = formData[
+        field as keyof Omit<FormData, "profileImage">
+      ] as string;
+      const error = validateInput(
+        field,
+        field === "profileImage" ? formData.profileImage : value
+      );
       if (error) newErrors[field as keyof FormErrors] = error;
     }
-  
+
     setErrors(newErrors);
     return !hasFormErrors(newErrors);
   };
-  
+
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
     setIsLoading(true);
-    setServerError('');
+    setServerError("");
     console.log("Form data before submission:", formData);
 
     try {
       const formDataToSubmit = new FormData();
-      formDataToSubmit.append('agentname', formData.username);
-      formDataToSubmit.append('email', formData.email);
-      formDataToSubmit.append('mobile', formData.mobile);
-      formDataToSubmit.append('password', formData.password);
-      formDataToSubmit.append('pincode', formData.pincode);
+      formDataToSubmit.append("agentname", formData.username);
+      formDataToSubmit.append("email", formData.email);
+      formDataToSubmit.append("mobile", formData.mobile);
+      formDataToSubmit.append("password", formData.password);
+      formDataToSubmit.append("pincode", formData.pincode);
       if (formData.profileImage) {
-        formDataToSubmit.append('image', formData.profileImage);
+        formDataToSubmit.append("image", formData.profileImage);
       }
 
       console.log("FormData content:");
@@ -101,10 +108,11 @@ const RegisterForm: React.FC = () => {
       console.error("Registration failed:", error);
       let errorMessage = "Failed to register. Please try again.";
 
-      if (error.status === 'PARSING_ERROR') {
+      if (error.status === "PARSING_ERROR") {
         console.error("Server response parsing error:", error.error);
-        errorMessage = "Server error. Please try again later or contact support.";
-      } else if (error.data && typeof error.data === 'string') {
+        errorMessage =
+          "Server error. Please try again later or contact support.";
+      } else if (error.data && typeof error.data === "string") {
         try {
           const parsedError = JSON.parse(error.data);
           errorMessage = parsedError.message || errorMessage;
@@ -117,15 +125,15 @@ const RegisterForm: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-    navigate('/agent/login')
+    navigate("/agent/login");
   };
 
   const defaultOptions = {
     loop: true,
     autoplay: true,
-    animationData: fuelAnimation, 
+    animationData: fuelAnimation,
     rendererSettings: {
-      preserveAspectRatio: 'xMidYMid slice',
+      preserveAspectRatio: "xMidYMid slice",
     },
   };
 
@@ -137,10 +145,15 @@ const RegisterForm: React.FC = () => {
 
       {/* Right side: Registration form */}
       <div className="w-1/2 max-w-md p-8 space-y-6 bg-white rounded shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">Application Form</h2>
+        <h2 className="text-2xl font-bold text-center text-gray-900">
+          Application Form
+        </h2>
         <form onSubmit={handleRegister} className="mt-8 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="username">
+            <label
+              className="block text-sm font-medium text-gray-700"
+              htmlFor="username"
+            >
               Full Name
             </label>
             <input
@@ -153,11 +166,16 @@ const RegisterForm: React.FC = () => {
               required
               className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
-            {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
+            {errors.username && (
+              <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="email">
+            <label
+              className="block text-sm font-medium text-gray-700"
+              htmlFor="email"
+            >
               Your email
             </label>
             <input
@@ -170,11 +188,16 @@ const RegisterForm: React.FC = () => {
               required
               className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
-            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="mobile">
+            <label
+              className="block text-sm font-medium text-gray-700"
+              htmlFor="mobile"
+            >
               Mobile
             </label>
             <input
@@ -187,11 +210,16 @@ const RegisterForm: React.FC = () => {
               required
               className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
-            {errors.mobile && <p className="mt-1 text-sm text-red-600">{errors.mobile}</p>}
+            {errors.mobile && (
+              <p className="mt-1 text-sm text-red-600">{errors.mobile}</p>
+            )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="password">
+          <div className="relative">
+            <label
+              className="block text-sm font-medium text-gray-700"
+              htmlFor="password"
+            >
               Password
             </label>
             <input
@@ -204,11 +232,21 @@ const RegisterForm: React.FC = () => {
               required
               className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
-            {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+            <FontAwesomeIcon
+              icon={showPassword ? faEyeSlash : faEye}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+              onClick={() => setShowPassword((prev) => !prev)}
+            />
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="pincode">
+            <label
+              className="block text-sm font-medium text-gray-700"
+              htmlFor="pincode"
+            >
               Pincode
             </label>
             <input
@@ -221,11 +259,16 @@ const RegisterForm: React.FC = () => {
               required
               className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
-            {errors.pincode && <p className="mt-1 text-sm text-red-600">{errors.pincode}</p>}
+            {errors.pincode && (
+              <p className="mt-1 text-sm text-red-600">{errors.pincode}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="profileImage">
+            <label
+              className="block text-sm font-medium text-gray-700"
+              htmlFor="profileImage"
+            >
               Upload your licence Picture
             </label>
             <input
@@ -236,7 +279,9 @@ const RegisterForm: React.FC = () => {
               onChange={handleImageUpload}
               className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
-            {errors.profileImage && <p className="mt-1 text-sm text-red-600">{errors.profileImage}</p>}
+            {errors.profileImage && (
+              <p className="mt-1 text-sm text-red-600">{errors.profileImage}</p>
+            )}
           </div>
 
           <button
@@ -247,15 +292,20 @@ const RegisterForm: React.FC = () => {
             {isLoading ? "Submitting..." : "Submit"}
           </button>
 
-          {serverError && <p className="mt-2 text-sm text-red-600">{serverError}</p>}
+          {serverError && (
+            <p className="mt-2 text-sm text-red-600">{serverError}</p>
+          )}
           <div className="text-center mt-4">
             <p className="text-sm text-gray-600">
-              Alreaddy have an account? 
-              <Link to="/agent/login" className="text-blue-500 hover:underline ml-1">
+              Alreaddy have an account?
+              <Link
+                to="/agent/login"
+                className="text-blue-500 hover:underline ml-1"
+              >
                 Apply here
               </Link>
             </p>
-            </div>
+          </div>
         </form>
       </div>
     </div>

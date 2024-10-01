@@ -73,8 +73,8 @@ const OrderList: React.FC = () => {
                 <th style={{ padding: "10px" }}>Mobile</th>
                 <th style={{ padding: "10px" }}>Company</th>
                 <th style={{ padding: "10px" }}>Price</th>
-                <th style={{ padding: "10px" }}>Payment Method</th>
-                <th style={{ padding: "10px" }}>Expected At</th>
+                <th style={{ padding: "10px" }}>Payment</th>
+                <th style={{ padding: "10px" }}>Exp-Date</th>
                 <th style={{ padding: "10px" }}>Status</th>
               </tr>
             </thead>
