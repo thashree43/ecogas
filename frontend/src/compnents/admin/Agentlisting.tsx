@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useGetallagentQuery, useUpdateapprovalMutation } from "../../store/slice/Adminslice";
 import { toast } from "react-toastify";
 import {Agent} from "../../interfacetypes/type"
+import debounce from 'lodash.debounce';
 
 
 
@@ -11,15 +12,27 @@ const AgentList: React.FC = () => {
   const [updateApproval] = useUpdateapprovalMutation();
 
   const agents = data?.agents as Agent[] | undefined;
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-  };
-
-  const filteredUsers = agents?.filter((agent: Agent) =>
-    agent.agentname.toLowerCase().includes(search.toLowerCase()) ||
-    agent.email.toLowerCase().includes(search.toLowerCase())
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((searchTerm: string) => {
+        setSearch(searchTerm);
+      }, 300),
+    []
   );
+  const handleSearch = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      debouncedSearch(e.target.value);
+    },
+    [debouncedSearch]
+  );
+
+  const filteredUsers =useMemo(()=>{
+   return  agents?.filter((agent: Agent) =>
+      agent.agentname.toLowerCase().includes(search.toLowerCase()) ||
+      agent.email.toLowerCase().includes(search.toLowerCase())
+);
+  },[agents,search]) ;
+  
 
   const handleActionClick = async (agent: Agent) => {
     if (!agent._id) {

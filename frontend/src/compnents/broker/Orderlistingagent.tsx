@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { TruckIcon, CalendarIcon, CreditCardIcon, FileTextIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { TruckIcon, CalendarIcon, CreditCardIcon, FileTextIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from 'lucide-react';
 import { useOrderlistingQuery, useMarkorderdeliverMutation } from "../../store/slice/Brokerslice";
 import { toast } from 'react-toastify';
-import { Order } from "../../interfacetypes/type"
+import { Order,} from "../../interfacetypes/type"
+import debounce from 'lodash.debounce';
 
 const OrderCard: React.FC<{ order: Order; index: number; onDelivered: (orderId: string) => void }> = ({ order, index, onDelivered }) => (
   <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col h-full text-sm">
@@ -51,8 +52,12 @@ const OrderCard: React.FC<{ order: Order; index: number; onDelivered: (orderId: 
 
 const OrderListCards: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [updated] = useMarkorderdeliverMutation()
-  const ordersPerPage = 6; // Increased from 6 to 9 to fit more cards
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [updated] = useMarkorderdeliverMutation();
+  const [updateTrigger, setUpdateTrigger] = useState(0);
+
+  const ordersPerPage = 6;
 
   const {
     data: orderResponse,
@@ -61,18 +66,38 @@ const OrderListCards: React.FC = () => {
     refetch,
   } = useOrderlistingQuery();
 
-  const handleDelivered = async (orderId: string) => {
-    console.log(`Order ${orderId} marked as delivered`);
+  useEffect(() => {
+    refetch();
+  }, [updateTrigger, refetch]);
 
+  const debouncedSearch = useMemo(
+    () => debounce((value: string) => {
+      setDebouncedSearchTerm(value);
+    }, 300),
+    []
+  );
+
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setSearchTerm(value);
+      debouncedSearch(value);
+    },
+    [debouncedSearch]
+  );
+
+  const handleDelivered = async (orderId: string) => {
     try {
-      const update = await updated(orderId).unwrap();
-      if (update.succeess) {
-        toast.success("Successfully updated status")
-        refetch();
+      const result = await updated(orderId).unwrap();
+      if (result.success) {
+        toast.success("Successfully updated status");
+        setUpdateTrigger(prev => prev + 1);
+      } else {
+        toast.error("Failed to update status: " + (result.error || "Unknown error"));
       }
-      console.log(update, "the data received");
     } catch (error) {
-      toast.error("Failed to update status");
+      console.error("Error updating order status:", error);
+      toast.error("Failed to update status. Please try again.");
     }
   };
 
@@ -90,25 +115,51 @@ const OrderListCards: React.FC = () => {
 
   const orders = Array.isArray(orderResponse?.result?.orders) ? orderResponse.result.orders : [];
 
-  if (orders.length === 0) {
+  const filteredOrders = orders.filter((order: Order) =>
+    order.company.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+    order.address.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+    order.mobile.toString().includes(debouncedSearchTerm)
+  );
+
+  if (filteredOrders.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
         <h2 className="text-3xl font-bold mb-6 text-gray-800">My Orders</h2>
+        <div className="mb-4 relative">
+          <input
+            type="text"
+            placeholder="Search orders..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full p-2 pl-8 border rounded-md"
+          />
+          <SearchIcon className="absolute left-2 top-2.5 h-5 w-5 text-gray-400" />
+        </div>
         <div className="text-center text-gray-500">No orders found.</div>
       </div>
     );
   }
 
-  const totalPages = Math.ceil(orders.length / ordersPerPage);
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-6 text-gray-800">My Orders</h2>
+      <div className="mb-4 relative">
+        <input
+          type="text"
+          placeholder="Search orders..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="w-full p-2 pl-8 border rounded-md"
+        />
+        <SearchIcon className="absolute left-2 top-2.5 h-5 w-5 text-gray-400" />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4">
         {currentOrders.map((order: Order, index: number) => (
           <OrderCard key={order._id} order={order} index={indexOfFirstOrder + index} onDelivered={handleDelivered} />
@@ -148,5 +199,6 @@ const OrderListCards: React.FC = () => {
     </div>
   );
 };
+
 
 export default OrderListCards;

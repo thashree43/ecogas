@@ -1,23 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useGetusersQuery, useUpdatestatusMutation } from "../../store/slice/Userapislice";
 import { toast } from "react-toastify";
-import {User} from "../../interfacetypes/type"
-
-
+import { User } from "../../interfacetypes/type";
+import debounce from 'lodash.debounce';
 
 const UserList: React.FC = () => {
   const [search, setSearch] = useState<string>('');
-  const { data: users, isLoading, error, refetch } = useGetusersQuery();
+  const { data: users, isLoading, error } = useGetusersQuery();
   const [updatestatus] = useUpdatestatusMutation();
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-  };
+  // Debounced search function
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((searchTerm: string) => {
+        setSearch(searchTerm);
+      }, 300),
+    []
+  );
+
+  const handleSearch = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      debouncedSearch(e.target.value);
+    },
+    [debouncedSearch]
+  );
 
   const toggleBlockStatus = async (userId: string, currentStatus: boolean) => {
     if (!userId) {
       console.error("Invalid user ID:", userId);
-      alert("Invalid user ID. Please try again.");
+      toast.error("Invalid user ID. Please try again.");
       return;
     }
 
@@ -35,10 +46,12 @@ const UserList: React.FC = () => {
     }
   };
 
-  const filteredUsers = users?.filter((user: User) =>
-    user.username.toLowerCase().includes(search.toLowerCase()) ||
-    user.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => {
+    return users?.filter((user: User) =>
+      user.username.toLowerCase().includes(search.toLowerCase()) ||
+      user.email.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [users, search]);
 
   return (
     <div className="user-list-container" style={{ padding: '20px' }}>
@@ -46,7 +59,6 @@ const UserList: React.FC = () => {
       <input
         type="text"
         placeholder="Search by name, email"
-        value={search}
         onChange={handleSearch}
         style={{
           marginBottom: '20px',
