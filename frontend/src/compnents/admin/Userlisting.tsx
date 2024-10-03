@@ -1,13 +1,9 @@
 import React, { useState } from "react";
 import { useGetusersQuery, useUpdatestatusMutation } from "../../store/slice/Userapislice";
 import { toast } from "react-toastify";
+import {User} from "../../interfacetypes/type"
 
-interface User {
-  _id: string;
-  username: string;
-  email: string;
-  is_blocked: boolean;
-}
+
 
 const UserList: React.FC = () => {
   const [search, setSearch] = useState<string>('');
@@ -27,23 +23,15 @@ const UserList: React.FC = () => {
 
     try {
       const newStatus = !currentStatus;
-      console.log(`Updating status for user ${userId} to ${newStatus}`);
-
-      const response = await updatestatus({ id: userId, is_blocked: newStatus }).unwrap();
-      console.log("The response in the frontend", response);
-
-      if (response && response.success) {
-        console.log("Status updated successfully");
-        refetch(); // Refetch the user list to ensure we have the latest data
+      const result = await updatestatus({ id: userId, is_blocked: newStatus }).unwrap();
+      if (result.success) {
+        toast.success("User status updated successfully");
       } else {
-        console.error("Failed to update status: Unexpected response format");
-        toast.error("Failed to update status. Please try again.");
-        refetch(); // Refetch to ensure UI is in sync with server state
+        toast.error("Failed to update user status");
       }
     } catch (error) {
       console.error("Error while updating status:", error);
-      alert("An error occurred while updating the status. Please check your network and try again.");
-      refetch(); // Refetch to ensure UI is in sync with server state
+      toast.error("An error occurred while updating the status. Please try again.");
     }
   };
 

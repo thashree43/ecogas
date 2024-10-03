@@ -12,12 +12,7 @@ const Mainlayout = ({ children }: { children: React.ReactNode }) => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   
-  // const [isLoginOpen, setIsLoginOpen] = useState(false);
-  // const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-
-  // const handleLoginOpen = () => {
-  //   setIsLoginOpen(true);
-  // };
+  
 
   const handleLoginClose = () => {
     setIsLoginOpen(false);

@@ -1,19 +1,8 @@
 import React, { useState } from 'react';
 import { useGetordersQuery } from "../../../store/slice/Userapislice";
-import { EyeIcon, TruckIcon, CalendarIcon, CreditCardIcon, FileTextIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import {  TruckIcon, CalendarIcon, CreditCardIcon, FileTextIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import {Order} from "../../../interfacetypes/type"
 
-interface Order {
-  _id: string;
-  name: string;
-  address: string;
-  mobile: number;
-  consumerid: number;
-  company: string;
-  price: number;
-  paymentmethod: string;
-  expectedat: Date;
-  status: string;
-}
 
 const OrderCard: React.FC<{ order: Order; index: number }> = ({ order, index }) => (
   <div className="bg-white rounded-lg shadow-md p-6 flex flex-col h-full">

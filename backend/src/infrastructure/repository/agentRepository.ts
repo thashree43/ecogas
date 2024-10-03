@@ -28,11 +28,10 @@ export class AgentRepository implements IAgentRepository {
       const savedAgent = await newagent.save();
       return savedAgent.toObject();
     } catch (error) {
-      console.error(error);
+      console.error("Error saving agent:", error);
       throw error;
     }
   }
-
   async findemail(email: string): Promise<IagentData | null> {
     try {
       const agent = (await agentModel.findOne({ email })) as IagentData;

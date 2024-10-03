@@ -11,15 +11,12 @@ import {
   updateorderstatususecase,
 } from "../../usecase";
 import { AgentRepository } from "../../infrastructure/repository";
-import path from "path";
-import fs from "fs";
 import multer from "multer";
 import multerS3 from "multer-s3";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 import { config } from "dotenv";
 config();
 
-// s3 bucket configuring
 const s3Client = new S3Client({
   region: "us-east-1",
   credentials: {
@@ -31,8 +28,8 @@ const s3Client = new S3Client({
 const upload = multer({
   storage: multerS3({
     s3: s3Client,
-    contentType: multerS3.AUTO_CONTENT_TYPE,
     bucket: "thashree",
+    contentType: multerS3.AUTO_CONTENT_TYPE,
     key: function (req, file, cb) {
       cb(null, Date.now().toString() + "-" + file.originalname);
     },

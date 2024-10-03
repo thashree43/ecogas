@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getToken } from "../../Token/gettoken";
+import { getToken } from "../../token/gettoken";
 
 interface ProtectedRouteProps {
     component: React.ComponentType;
@@ -13,6 +13,9 @@ const AgentProtectRoute: React.FC<ProtectedRouteProps> = ({ component: Component
 
     useEffect(() => {
         const checkAuth = () => {
+            const tokens = getToken("agentToken")
+            console.log("the agent tokens in the adminagentprotect",tokens);
+            
             const token = localStorage.getItem("agentToken");
             console.log("AgentProtectRoute - token:", token);
 

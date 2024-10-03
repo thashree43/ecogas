@@ -6,26 +6,10 @@ import { useAgentapplyMutation } from "../../store/slice/Brokerslice";
 import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-interface FormData {
-  username: string;
-  email: string;
-  mobile: string;
-  password: string;
-  profileImage?: File;
-  pincode: string;
-}
-
-interface FormErrors {
-  username?: string;
-  email?: string;
-  mobile?: string;
-  password?: string;
-  profileImage?: string;
-  pincode?: string;
-}
+import { CustomFormData, FormErrors } from "../../interfacetypes/type";
 
 const RegisterForm: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<CustomFormData>({
     username: "",
     email: "",
     mobile: "",
@@ -66,7 +50,7 @@ const RegisterForm: React.FC = () => {
 
     for (const field in formData) {
       const value = formData[
-        field as keyof Omit<FormData, "profileImage">
+        field as keyof Omit<CustomFormData, "profileImage">
       ] as string;
       const error = validateInput(
         field,
@@ -223,7 +207,7 @@ const RegisterForm: React.FC = () => {
               Password
             </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               id="password"
               name="password"
               placeholder="Enter your password"

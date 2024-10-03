@@ -305,7 +305,7 @@ export class userController {
       }
 
       console.log("User status updated:", updatedUser);
-      res.status(200).json({ success: true, user: updatedUser });
+      res.status(200).json({ success: true });
     } catch (error) {
       console.error("Error updating user status:", error);
       next(error);

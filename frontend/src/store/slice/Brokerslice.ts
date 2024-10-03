@@ -14,14 +14,6 @@ interface Order {
   status: string;
 }
 
-interface AgentResponse {
-  success: boolean;
-  _id: string;
-  agentname: string;
-  email: string;
-  is_Approved: boolean;
-  orders: Order[];
-}
 
 interface Product {
   _id: string;

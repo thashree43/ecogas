@@ -8,14 +8,7 @@ import { FaSearch, FaTrash, FaEdit } from "react-icons/fa";
 import ProductAddingForm from "./Productaddingmodal";
 import ProductEditingForm from "./Producteditingmodal";
 import { toast } from "react-toastify";
-
-interface Product {
-  _id: string;
-  companyname: string;
-  weight: number;
-  price: number;
-  quantity: number;
-}
+import { FunctionData, Product } from "../../interfacetypes/type"; // Ensure types are correctly imported
 
 const ProductList: React.FC = () => {
   const [search, setSearch] = useState<string>("");
@@ -27,11 +20,11 @@ const ProductList: React.FC = () => {
   const [deleteproduct] = useDeleteproductMutation();
 
   useEffect(() => {
-    trigger(); // Fetch products on mount
+    trigger();
   }, [trigger]);
 
   const filteredProducts =
-    data?.products?.filter((product) =>
+    data?.products?.filter((product: Product) =>
       product.companyname.toLowerCase().includes(search.toLowerCase())
     ) || [];
 
@@ -57,7 +50,7 @@ const ProductList: React.FC = () => {
       const res = await deleteproduct({ id: productId }).unwrap();
       if (res.success) {
         toast.success("The product was deleted successfully");
-        trigger(); // Refetch products after deletion
+        trigger();
       }
     } catch (error) {
       console.error("Failed to delete product:", error);
@@ -69,12 +62,17 @@ const ProductList: React.FC = () => {
     try {
       await updateProduct(updatedProduct).unwrap();
       toast.success("Product updated successfully");
-      trigger(); 
+      trigger();
       closeEditModal();
     } catch (error) {
       console.error("Failed to update product:", error);
       toast.error("Failed to update product");
     }
+  };
+
+  const formProps: FunctionData = {
+    refetch: trigger,
+    closeModal: closeModal,
   };
 
   return (
@@ -148,7 +146,7 @@ const ProductList: React.FC = () => {
             <button style={styles.closeModalButton} onClick={closeModal}>
               X
             </button>
-            <ProductAddingForm refetchProducts={trigger} closeModal={closeModal} />
+            <ProductAddingForm {...formProps} />
           </div>
         </div>
       )}
@@ -160,10 +158,9 @@ const ProductList: React.FC = () => {
               X
             </button>
             <ProductEditingForm
-              refetchProducts={trigger}
-              closeModal={closeEditModal}
               initialProduct={editingProduct}
               onEdit={handleEdit}
+              {...formProps}
             />
           </div>
         </div>
@@ -229,81 +226,67 @@ const styles = {
   },
   cardHeader: {
     padding: "20px",
-    background: "linear-gradient(rgb(44, 62, 80) 0%, rgb(52, 73, 94) 100%)",
-    color: "#ffffff",
-    textAlign: "center" as "center",
+    background: "linear-gradient(rgb(44, 62, 80) 0%, rgb(52, 152, 219) 100%)",
+    color: "#fff",
   },
   companyName: {
     margin: 0,
-    fontSize: "18px",
   },
   cardBody: {
     padding: "20px",
   },
   info: {
     margin: "10px 0",
-    fontSize: "14px",
+  },
+  cardActions: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginTop: "10px",
+  },
+  editButton: {
+    backgroundColor: "#3498db",
+    color: "#fff",
+    padding: "10px",
+    border: "none",
+    cursor: "pointer",
+    borderRadius: "5px",
+  },
+  deleteButton: {
+    backgroundColor: "#e74c3c",
+    color: "#fff",
+    padding: "10px",
+    border: "none",
+    cursor: "pointer",
+    borderRadius: "5px",
   },
   modalBackdrop: {
     position: "fixed" as "fixed",
     top: 0,
     left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 1000,
   },
   modalContent: {
     backgroundColor: "#fff",
     padding: "20px",
     borderRadius: "8px",
-    width: "500px",
-    position: "relative" as "relative",
+    width: "90%",
+    maxWidth: "600px",
   },
   closeModalButton: {
-    position: "absolute" as "absolute",
-    top: "10px",
-    right: "10px",
     backgroundColor: "#e74c3c",
     color: "#fff",
     border: "none",
     borderRadius: "50%",
-    width: "30px",
-    height: "30px",
-    cursor: "pointer",
-  },
-  editButton: {
-    backgroundColor: "#2ecc71",
-    color: "#fff",
     padding: "5px 10px",
-    border: "none",
-    borderRadius: "5px",
     cursor: "pointer",
-    fontSize: "14px",
-    display: "flex",
-    alignItems: "center",
-    gap: "5px",
-    marginRight: "10px",
-  },
-  deleteButton: {
-    backgroundColor: "#e74c3c",
-    color: "#fff",
-    padding: "5px 10px",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    fontSize: "14px",
-    display: "flex",
-    alignItems: "center",
-    gap: "5px",
-  },
-  cardActions: {
-    marginTop: "10px",
-    display: "flex",
-    justifyContent: "flex-end",
+    position: "absolute" as "absolute",
+    right: "10px",
+    top: "10px",
   },
 };
 

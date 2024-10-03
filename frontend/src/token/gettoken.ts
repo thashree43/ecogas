@@ -1,4 +1,4 @@
-import extractToken from "./Extracttoken"
+import extractToken from "./extracttoken"
 import Cookies from "js-cookie"
 
 export const getToken = (name:string)=>{

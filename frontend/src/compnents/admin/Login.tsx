@@ -3,7 +3,7 @@ import {
   validateInput,
   FormErrors,
   isFormEmpty,
-} from "../../validationpages/validation"; // Adjust import path as needed
+} from "../../validationpages/validation"; 
 import { useAdminloginMutation } from "../../store/slice/Userapislice";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -129,7 +129,7 @@ const Login: React.FC = () => {
             Password
           </label>
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             id="password"
             name="password"
             value={password}

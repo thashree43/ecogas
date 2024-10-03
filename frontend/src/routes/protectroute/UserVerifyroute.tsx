@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { getToken } from "../../Token/gettoken";
+import { getToken } from "../../token/gettoken";
 import { useEffect } from "react";
 
 interface ProtectedRouteProps {

@@ -11,6 +11,8 @@ import Userotp from "./Userotp";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
+
+
 const SignUpPage: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   isOpen,
   onClose,

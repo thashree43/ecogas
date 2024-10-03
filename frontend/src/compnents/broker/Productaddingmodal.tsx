@@ -2,28 +2,18 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useAppProductMutation } from "../../store/slice/Brokerslice";
 import { toast } from "react-toastify";
+import {CompanyData,FunctionData} from "../../interfacetypes/type"
 
-interface FormData {
-  companyName: string;
-  kg: string;
-  price: string;
-  quantity: string;
-}
 
-interface ProductAddingFormProps {
-  refetchProducts: () => void;
-  closeModal: () => void;
-}
-
-const ProductAddingForm: React.FC<ProductAddingFormProps> = ({
-  refetchProducts,
+const ProductAddingForm: React.FC<FunctionData> = ({
+  refetch,
   closeModal,
 }) => {
-  const [formData, setFormData] = useState<FormData>({
-    companyName: "",
-    kg: "",
-    price: "",
-    quantity: "",
+  const [formData, setFormData] = useState<CompanyData>({
+    companyname: "",
+    weight: 0,
+    price:0,
+    quantity: 0,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -90,7 +80,7 @@ const ProductAddingForm: React.FC<ProductAddingFormProps> = ({
 
       if (data.success) {
         setServerError("");
-        refetchProducts();
+        refetch();
         toast.success("Product added successfully");
         closeModal();
       }
@@ -143,7 +133,7 @@ const ProductAddingForm: React.FC<ProductAddingFormProps> = ({
               id={field.name}
               name={field.name}
               placeholder={field.placeholder}
-              value={formData[field.name as keyof FormData]}
+              value={formData[field.name as keyof CompanyData]}
               onChange={handleChange}
               required
               min={field.type === "number" ? "0.01" : undefined}

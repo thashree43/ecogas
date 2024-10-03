@@ -11,8 +11,7 @@ const ResetPasswordForm: React.FC = () => {
   const navigate = useNavigate();
   const [resetPassword] = useResetpasswordMutation();
 
-  // Extracting token from URL parameters
-  const { token } = useParams<{ token: string }>(); // Ensure 'token' is extracted correctly
+  const { token } = useParams<{ token: string }>(); 
 
   console.log('Extracted token from useParams:', token);
 

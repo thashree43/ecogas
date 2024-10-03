@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Userotp from '../Registerpart/Userotp';
+import Userotp from '../registerpart/Userotp';
 import { useLocation } from 'react-router-dom';
 
 const Otppage = () => {

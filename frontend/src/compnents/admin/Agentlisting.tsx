@@ -1,17 +1,9 @@
 import React, { useState } from "react";
 import { useGetallagentQuery, useUpdateapprovalMutation } from "../../store/slice/Adminslice";
 import { toast } from "react-toastify";
+import {Agent} from "../../interfacetypes/type"
 
-// Define the Agent type according to the actual API response
-interface Agent {
-  _id: string;
-  agentname: string;
-  email: string;
-  pincode:number;
-  mobile: number;
-  is_Approved: boolean;
-  imageUrl: string; // Assuming image URL is part of the agent data
-}
+
 
 const AgentList: React.FC = () => {
   const [search, setSearch] = useState<string>('');

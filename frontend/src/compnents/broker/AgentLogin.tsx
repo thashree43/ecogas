@@ -9,27 +9,7 @@ import { useAgentloginMutation } from "../../store/slice/Brokerslice";
 import { setagentInfo } from "../../store/slice/Agentauthslice";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-interface FormData {
-  email: string;
-  password: string;
-}
-
-interface FormErrors {
-  email?: string;
-  password?: string;
-}
-
-interface AgentLoginResponse {
-  success: boolean;
-  agent: {
-    agentId: string;
-    agentname: string;
-    email: string;
-    mobile: number;
-    pincode: number;
-  };
-  token: string;
-}
+import {FormData,FormErrors,AgentLoginResponse} from "../../interfacetypes/type"
 
 const AgentLoginForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({

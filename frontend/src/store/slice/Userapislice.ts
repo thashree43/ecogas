@@ -123,14 +123,13 @@ export const userApislice = createApi({
       query: () => "/get_user",
       providesTags: ['User'],
     }),
-   
-    updatestatus: builder.mutation<User, { id: string; is_blocked: boolean }>({
+    
+    updatestatus: builder.mutation<{ success: boolean }, { id: string; is_blocked: boolean }>({
       query: ({ id, is_blocked }) => ({
         url: `/updatestatus/${id}`,
         method: "PATCH",
         body: { is_blocked },
       }),
-      invalidatesTags: ['User'],
       async onQueryStarted({ id, is_blocked }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
           userApislice.util.updateQueryData('getusers', undefined, (draft) => {

@@ -1,24 +1,10 @@
 import React, { useState } from "react";
 import { useGetfullordersQuery } from "../../store/slice/Adminslice";
 import { toast } from "react-toastify";
+import {Order,OrderResponse} from "../../interfacetypes/type"
 
-interface Order {
-  _id: string;
-  name: string;
-  address: string;
-  mobile: number;
-  consumerid: number;
-  company: string;
-  price: number;
-  paymentmethod: string;
-  expectedat: string;
-  status: string;
-}
 
-interface OrderResponse {
-  success: boolean;
-  orders: Order[];
-}
+
 
 const OrderList: React.FC = () => {
   const [search, setSearch] = useState<string>("");

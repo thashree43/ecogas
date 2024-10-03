@@ -38,13 +38,18 @@ export class agentController {
     console.log("Controller reached. Request body:", req.body);
     console.log("File:", req.file);
     try {
+      if (!req.file) {
+        res.status(400).json({ message: "Image file is required" });
+        return;
+      }
+
       const agentData = {
         agentname: req.body.agentname,
         email: req.body.email,
         mobile: req.body.mobile,
         password: req.body.password,
         pincode: req.body.pincode,
-        image: req.file ? req.file.filename : "",
+        image: (req.file as Express.MulterS3.File).location,
       };
       
       const savedAgent = await this.agentApplyUsecase.applyAgent(agentData);
@@ -56,6 +61,7 @@ export class agentController {
       res.status(500).json({ message: "Internal server error" });
     }
   };
+
   agentlogin = async (
     req: Request,
     res: Response,

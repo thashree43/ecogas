@@ -5,7 +5,6 @@ interface AgentState {
     agentId: string;
     agentname: string;
     email: string;
-    // Add any other relevant fields
   } | null;
 }
 

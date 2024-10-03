@@ -1,26 +1,14 @@
 import React, { useState } from 'react';
-import { EyeIcon, TruckIcon, CalendarIcon, CreditCardIcon, FileTextIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { useOrderlistingQuery,useMarkorderdeliverMutation } from "../../store/slice/Brokerslice";
+import { TruckIcon, CalendarIcon, CreditCardIcon, FileTextIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { useOrderlistingQuery, useMarkorderdeliverMutation } from "../../store/slice/Brokerslice";
 import { toast } from 'react-toastify';
-
-interface Order {
-  _id: string;
-  name: string;
-  address: string;
-  mobile: number;
-  consumerid: number;
-  company: string;
-  price: number;
-  paymentmethod: string;
-  expectedat: Date;
-  status: string;
-}
+import { Order } from "../../interfacetypes/type"
 
 const OrderCard: React.FC<{ order: Order; index: number; onDelivered: (orderId: string) => void }> = ({ order, index, onDelivered }) => (
-  <div className="bg-white rounded-lg shadow-md p-6 flex flex-col h-full">
-    <div className="flex justify-between items-center mb-4">
-      <span className="text-sm font-semibold text-gray-500">Order #{index + 1}</span>
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+  <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col h-full text-sm">
+    <div className="flex justify-between items-center mb-2">
+      <span className="text-xs font-semibold text-gray-500">Order #{index + 1}</span>
+      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
         order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
         order.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
         'bg-blue-100 text-blue-800'
@@ -28,32 +16,32 @@ const OrderCard: React.FC<{ order: Order; index: number; onDelivered: (orderId: 
         {order.status}
       </span>
     </div>
-    <h3 className="text-lg font-semibold mb-2">{order.company}</h3>
-    <div className="flex items-center mb-2">
-      <TruckIcon className="w-4 h-4 mr-2 text-gray-500" />
-      <span className="text-sm text-gray-600">{order.address}</span>
+    <h3 className="text-base font-semibold mb-1">{order.company}</h3>
+    <div className="flex items-center mb-1">
+      <TruckIcon className="w-3 h-3 mr-1 text-gray-500" />
+      <span className="text-xs text-gray-600 truncate">{order.address}</span>
+    </div>
+    <div className="flex items-center mb-1">
+      <CalendarIcon className="w-3 h-3 mr-1 text-gray-500" />
+      <span className="text-xs text-gray-600">{new Date(order.expectedat).toLocaleDateString()}</span>
     </div>
     <div className="flex items-center mb-2">
-      <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
-      <span className="text-sm text-gray-600">{new Date(order.expectedat).toLocaleDateString()}</span>
-    </div>
-    <div className="flex items-center mb-4">
-      <CreditCardIcon className="w-4 h-4 mr-2 text-gray-500" />
-      <span className="text-sm text-gray-600">{order.paymentmethod}</span>
+      <CreditCardIcon className="w-3 h-3 mr-1 text-gray-500" />
+      <span className="text-xs text-gray-600">{order.paymentmethod}</span>
     </div>
     <div className="mt-auto">
-      <div className="text-lg font-bold text-green-600 mb-2">₹{order.price.toFixed(2)}/-</div>
+      <div className="text-base font-bold text-green-600 mb-2">₹{order.price.toFixed(2)}/-</div>
       {order.status.toLowerCase() === "delivered" ? (
-        <button className="w-full bg-gray-300 text-gray-600 font-semibold py-2 px-4 rounded flex items-center justify-center cursor-not-allowed" disabled>
-          <FileTextIcon className="w-4 h-4 mr-2" />
+        <button className="w-full bg-gray-200 text-gray-600 font-semibold py-1 px-2 rounded text-xs flex items-center justify-center cursor-not-allowed" disabled>
+          <FileTextIcon className="w-3 h-3 mr-1" />
           Delivered
         </button>
       ) : (
         <button 
-          className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded flex items-center justify-center"
+          className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-2 rounded text-xs flex items-center justify-center"
           onClick={() => onDelivered(order._id)}
         >
-          <TruckIcon className="w-4 h-4 mr-2" />
+          <TruckIcon className="w-3 h-3 mr-1" />
           Mark as Delivered
         </button>
       )}
@@ -64,25 +52,28 @@ const OrderCard: React.FC<{ order: Order; index: number; onDelivered: (orderId: 
 const OrderListCards: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [updated] = useMarkorderdeliverMutation()
-  const ordersPerPage = 6;
+  const ordersPerPage = 6; // Increased from 6 to 9 to fit more cards
 
   const {
     data: orderResponse,
     error: userError,
     isLoading: userLoading,
+    refetch,
   } = useOrderlistingQuery();
 
   const handleDelivered = async (orderId: string) => {
-    
     console.log(`Order ${orderId} marked as delivered`);
 
-    const update = await updated(orderId).unwrap();
-    if (update.succeess) {
-        toast.success("successfully updated staus ")
+    try {
+      const update = await updated(orderId).unwrap();
+      if (update.succeess) {
+        toast.success("Successfully updated status")
         refetch();
+      }
+      console.log(update, "the data received");
+    } catch (error) {
+      toast.error("Failed to update status");
     }
-    console.log(update,"the data recieved");
-    
   };
 
   if (userLoading) {
@@ -97,9 +88,6 @@ const OrderListCards: React.FC = () => {
     return <div className="text-center text-red-500 font-semibold">Error loading orders. Please try again later.</div>;
   }
 
-  console.log(orderResponse, "the orders response");
-
-  // Check if orderResponse, result, and orders exist and are an array
   const orders = Array.isArray(orderResponse?.result?.orders) ? orderResponse.result.orders : [];
 
   if (orders.length === 0) {
@@ -121,7 +109,7 @@ const OrderListCards: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-6 text-gray-800">My Orders</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4">
         {currentOrders.map((order: Order, index: number) => (
           <OrderCard key={order._id} order={order} index={indexOfFirstOrder + index} onDelivered={handleDelivered} />
         ))}

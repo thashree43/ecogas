@@ -2,38 +2,19 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { useEditproductMutation } from "../../store/slice/Brokerslice";
-
-interface FormData {
-  companyName: string;
-  kg: string;
-  price: string;
-  quantity: string;
-}
-
-interface Product {
-  _id: string;
-  companyname: string;
-  weight: number;
-  price: number;
-  quantity: number;
-}
-
-interface ProductEditingFormProps {
-  refetchProducts: () => void;
-  closeModal: () => void;
-  initialProduct?: Product;
-}
+import { CompanyData, ProductEditingFormProps, Product } from "../../interfacetypes/type";
 
 const ProductEditingForm: React.FC<ProductEditingFormProps> = ({
-  refetchProducts,
+  refetch,
   closeModal,
   initialProduct,
+  onEdit
 }) => {
-  const [formData, setFormData] = useState<FormData>({
-    companyName: "",
-    kg: "",
-    price: "",
-    quantity: "",
+  const [formData, setFormData] = useState<CompanyData>({
+    companyname: "",
+    weight: 0,
+    price: 0,
+    quantity: 0,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -43,31 +24,31 @@ const ProductEditingForm: React.FC<ProductEditingFormProps> = ({
   useEffect(() => {
     if (initialProduct) {
       setFormData({
-        companyName: initialProduct.companyname || "",
-        kg: String(initialProduct.weight) || "",
-        price: String(initialProduct.price) || "",
-        quantity: String(initialProduct.quantity) || "",
+        companyname: initialProduct.companyname || "",
+        weight: initialProduct.weight || 0,
+        price: initialProduct.price || 0,
+        quantity: initialProduct.quantity || 0,
       });
     }
   }, [initialProduct]);
 
-  const validateInput = (name: string, value: string): string => {
+  const validateInput = (name: string, value: string | number): string => {
     let error = '';
     switch (name) {
-      case 'companyName':
+      case 'companyname':
         if (!value) {
           error = 'Company name is required';
-        } else if (value.length < 3) {
+        } else if (typeof value === 'string' && value.length < 3) {
           error = 'Company name must be at least 3 characters long';
         }
         break;
-      case 'kg':
+      case 'weight':
       case 'price':
       case 'quantity':
-        if (!value) {
+        if (value === '') {
           error = `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
-        } else if (isNaN(Number(value)) || Number(value) <= 0) {
-          error = `${name.charAt(0).toUpperCase() + name.slice(1)} must be a positive number`;
+        } else if (isNaN(Number(value)) || Number(value) < 0) {
+          error = `${name.charAt(0).toUpperCase() + name.slice(1)} must be a non-negative number`;
         }
         break;
       default:
@@ -88,8 +69,15 @@ const ProductEditingForm: React.FC<ProductEditingFormProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    const error = validateInput(name, value);
+    let newValue: string | number = value;
+
+    if (name !== 'companyname') {
+      // For number inputs, convert to number or use empty string
+      newValue = value === '' ? '' : Number(value);
+    }
+
+    setFormData({ ...formData, [name]: newValue });
+    const error = validateInput(name, newValue);
     setErrors(prev => ({ ...prev, [name]: error }));
   };
 
@@ -99,18 +87,14 @@ const ProductEditingForm: React.FC<ProductEditingFormProps> = ({
 
     setIsLoading(true);
     try {
-      const updatedProduct = {
-        _id: initialProduct?._id,
-        companyname: formData.companyName,
-        weight: parseFloat(formData.kg),
-        price: parseFloat(formData.price),
-        quantity: parseInt(formData.quantity, 10),
+      const updatedProduct: Product = {
+        _id: initialProduct._id,
+        ...formData
       };
 
-      const response = await editproduct(updatedProduct).unwrap();
-      console.log(response, "the edited data");
+      await onEdit(updatedProduct);
       toast.success("Product updated successfully");
-      refetchProducts();
+      refetch();
       closeModal();
     } catch (error) {
       toast.error("Failed to update the product");
@@ -130,19 +114,14 @@ const ProductEditingForm: React.FC<ProductEditingFormProps> = ({
         className="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4"
       >
         <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">
-          {initialProduct ? "Edit Product" : "Product Registration"}
+          Edit Product
         </h2>
 
         {[
-          {
-            name: "companyName",
-            label: "Company Name",
-            placeholder: "Enter company name",
-            type: "text",
-          },
-          { name: "kg", label: "KG (Weight)", placeholder: "Enter weight in KG", type: "number" },
-          { name: "price", label: "Price (₹)", placeholder: "Enter price", type: "number" },
-          { name: "quantity", label: "Quantity", placeholder: "Enter quantity", type: "number" },
+          { name: "companyname", label: "Company Name", type: "text" },
+          { name: "weight", label: "Weight (kg)", type: "number" },
+          { name: "price", label: "Price (₹)", type: "number" },
+          { name: "quantity", label: "Quantity", type: "number" },
         ].map((field) => (
           <div key={field.name} className="mb-4">
             <label
@@ -155,11 +134,10 @@ const ProductEditingForm: React.FC<ProductEditingFormProps> = ({
               type={field.type}
               id={field.name}
               name={field.name}
-              value={formData[field.name as keyof FormData]}
+              value={formData[field.name as keyof CompanyData]}
               onChange={handleChange}
-              placeholder={field.placeholder}
-              min={field.type === "number" ? "0.01" : undefined}
-              step={field.type === "number" ? "0.01" : undefined}
+              min={field.type === "number" ? "0" : undefined}
+              step={field.type === "number" ? "any" : undefined}
               className="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300"
             />
             {errors[field.name] && (
@@ -176,7 +154,7 @@ const ProductEditingForm: React.FC<ProductEditingFormProps> = ({
             disabled={isLoading}
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300"
           >
-            {isLoading ? "Submitting..." : initialProduct ? "Update Product" : "Register Product"}
+            {isLoading ? "Updating..." : "Update Product"}
           </button>
         </div>
       </form>

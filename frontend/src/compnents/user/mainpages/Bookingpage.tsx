@@ -4,36 +4,11 @@ import {
   useGetbookQuery,
   useOrderthegasMutation,
 } from "../../../store/slice/Userapislice";
-import { loadStripe } from "@stripe/stripe-js";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { toast } from "react-toastify";
-import Cookies from "js-cookie";
+import {GasProvider,CustomerDetails,SuccessMessageProps} from "../../../interfacetypes/type"
 
-interface GasProvider {
-  _id: string;
-  agentname: string;
-  email: string;
-  mobile: string;
-  pincode: string;
-  products: Array<{
-    _id: string;
-    companyname: string;
-    weight: number;
-    price: number;
-    quantity: number;
-  }>;
-}
 
-interface CustomerDetails {
-  name: string;
-  consumerId: string;
-  mobile: string;
-  address: string;
-}
-interface SuccessMessageProps {
-  showSuccessMessage: boolean;
-  setShowSuccessMessage: React.Dispatch<React.SetStateAction<boolean>>;
-}
 const GasBookingPage: React.FC = () => {
   const stripe = useStripe();
   const elements = useElements();
