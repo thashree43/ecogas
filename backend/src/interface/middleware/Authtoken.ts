@@ -3,7 +3,7 @@ require("dotenv").config()
 
 
 // Function to generate a JWT token
-const secret = process.env.JWT_SECRET;
+const secret = process.env.JWT_ACCESS_SECRET;
 
 if (!secret) {
     throw new Error("JWT_SECRET environment variable is not set.");
