@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { userController } from "../controller/userController";
+
 import {
   signupusecase,
   VerifyOtpUseCase,
@@ -8,9 +9,6 @@ import {
   GoogleAuthUseCase,
   Resetpasswordusecase,
   ResentotpUseCase,
-  Adminloginusecase,
-  getuserusecase,
-  updateusecase,
   GetProviderUserSideUseCase,
   addbookusecase,
   GetBookUseCase,
@@ -18,13 +16,13 @@ import {
   orderplaceusecase,
   listorderusersideusecase
 } from "../../usecase";
-import authenticateToken from "../middleware/Authmidleware";
 import {
   UserRepository,
   RedisOtpRepository,
   AgentRepository,
 } from "../../infrastructure/repository";
 import { Otpservice } from "../../infrastructure/service/Otpservice";
+import { userauth } from "../middleware/userauth";
 
 // Create instances of repositories, services, and use cases
 const userRepositoryInstance = new UserRepository();
@@ -56,17 +54,13 @@ const resentOtpUseCaseInstance = new ResentotpUseCase(
   OtpServiceInstance,
   redisOtpRepositoryInstance
 );
-const adminLoginUseCaseInstance = new Adminloginusecase(userRepositoryInstance);
-const getUserUserCaseInstance = new getuserusecase(userRepositoryInstance);
-const updateUseCaseInstance = new updateusecase(userRepositoryInstance);
 const GetproviderUseCaseInstance = new GetProviderUserSideUseCase(
   agentRepositoryInstance
 );
 const AddBookUseCaseInstance = new addbookusecase(userRepositoryInstance);
 const GetBookUseCaseInstance = new GetBookUseCase(userRepositoryInstance);
-const DeleteBookUseCasseInstance = new deletebookusecase(
-  userRepositoryInstance
-);
+const DeleteBookUseCaseInstance = new deletebookusecase(userRepositoryInstance);
+
 const OrderPlaceUseCaseInstance = new orderplaceusecase(userRepositoryInstance);
 const ListOrderUserSideUseCaseInstance = new listorderusersideusecase(userRepositoryInstance)
 // instances of the user controller
@@ -78,13 +72,10 @@ const userControllerInstance = new userController(
   requestPasswordUseCaseInstance,
   resetPasswordUseCaseInstance,
   resentOtpUseCaseInstance,
-  adminLoginUseCaseInstance,
-  getUserUserCaseInstance,
-  updateUseCaseInstance,
   GetproviderUseCaseInstance,
   AddBookUseCaseInstance,
   GetBookUseCaseInstance,
-  DeleteBookUseCasseInstance,
+  DeleteBookUseCaseInstance,
   OrderPlaceUseCaseInstance,
   ListOrderUserSideUseCaseInstance
 );
@@ -107,29 +98,22 @@ router.post("/login", (req, res, next) =>
 router.post("/google-login", (req, res, next) =>
   userControllerInstance.googleAuth(req, res, next)
 );
+router.post("/userrefresh-token",(req,res,next)=>
+userControllerInstance.userrefreshtoken(req,res,next))
 router.post("/resetpassword", (req, res, next) =>
   userControllerInstance.forgetpassword(req, res, next)
 );
 router.patch("/updatepassword", (req, res, next) =>
   userControllerInstance.resetpassword(req, res, next)
 );
-router.post("/adminlogin", (req, res, next) =>
-  userControllerInstance.adminlogin(req, res, next)
-);
-router.get("/get_user", authenticateToken(true,false), (req, res, next) =>
-  userControllerInstance.getusers(req, res, next)
-);
-router.patch("/updatestatus/:id", authenticateToken(true,false), (req, res, next) =>
-  userControllerInstance.updatestatus(req, res, next)
-);
 
 router.get(
   "/gas-providers/:pincode",
-  authenticateToken( false),
+  userauth,
   (req, res, next) => userControllerInstance.getprovider(req, res, next)
 );
 
-router.post("/addbook", authenticateToken( true,false), (req, res, next) =>
+router.post("/addbook", userauth, (req, res, next) =>
   userControllerInstance.addbook(req, res, next)
 );
 
@@ -139,13 +123,13 @@ router.get("/getbook/:userId", (req, res, next) =>
 
 router.delete(
   "/deletebook/:bookid",
-  authenticateToken(false, true),
+  userauth,
   (req, res, next) => userControllerInstance.deletebook(req, res, next)
 );
 
 router.post("/ordergas", (req, res, next) =>
-  userControllerInstance.ordergas(req, res, next)
+  userControllerInstance.orderplace(req, res, next)
 );
 
-router.get('/getorders/:id',(req,res,next)=>userControllerInstance.getorders(req,res,next))
+router.get('/getorders/:id',userauth,(req,res,next)=>userControllerInstance.listorderuserside(req,res,next))
 export { router as userroute };

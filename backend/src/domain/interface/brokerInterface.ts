@@ -7,7 +7,7 @@ export interface IAgentRepository {
   findemail(email: string): Promise<IagentData | null>;
   findByPincode(pincode: string): Promise<IagentData[]>;
   addproduct(productData: AgentProduct, agentId: string): Promise<IProductDocument | null>;
-  getallproduct(agentId: Types.ObjectId): Promise<IProductDocument[] | null>;
+  getallproduct(agentId: Types.ObjectId): Promise<IProductDocument[]>;
   findbyid(_id: Schema.Types.ObjectId): Promise<IProductDocument | null>;
   updateProduct(id: string | Types.ObjectId, productData: Partial<IProductDocument>): Promise<IProductDocument | null>;
   deleteproduct(id: string | Types.ObjectId): Promise<IProductDocument | null>;

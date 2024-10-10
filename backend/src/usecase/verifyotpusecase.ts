@@ -1,6 +1,6 @@
 import { IUserData } from "../domain";
 import { IRedisRepository, IUserRepository } from "../domain";
-import { generatetoken} from "../interface/middleware/Authtoken";
+import { generatetoken } from "../interface/middleware/authtoken";
 
 export class VerifyOtpUseCase {
   constructor(
@@ -8,7 +8,7 @@ export class VerifyOtpUseCase {
     private userRepository: IUserRepository
   ) {}
 
-  async execute(otp: string, email: string): Promise<{ success: boolean, token?: string, refreshToken?: string, user:IUserData }> {
+  async execute(otp: string, email: string): Promise<{ success: boolean, token?: string, refreshToken?: string, user: IUserData }> {
     if (!otp || !email) {
       throw new Error("OTP and email are required.");
     }
@@ -37,9 +37,15 @@ export class VerifyOtpUseCase {
     user.is_verified = true;
     await user.save();
 
-    const token = generatetoken({email});
-    const refreshToken = generatetoken({email});
+    const tokenPayload = { id: user._id.toString(), email }; 
+    const token = generatetoken(tokenPayload);
+    const refreshToken = generatetoken(tokenPayload); 
 
-    return { success: true, token, refreshToken, user };
+    return { 
+      success: true, 
+      token, 
+      refreshToken, 
+      user 
+    };
   }
 }

@@ -9,7 +9,6 @@ interface ProtectedRouteProps {
 const AdminVerifyRoute: React.FC<ProtectedRouteProps> = ({ component: Component }) => {
   const navigate = useNavigate();
   const token = localStorage.getItem("adminToken");
-      console.log("The admin token is:", token);
 
   useEffect(() => {
     if (token) {

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { useGetusersQuery, useUpdatestatusMutation } from "../../store/slice/Userapislice";
+import { useGetusersQuery, useUpdatestatusMutation } from "../../store/slice/Adminslice";
 import { toast } from "react-toastify";
 import { User } from "../../interfacetypes/type";
 import debounce from 'lodash.debounce';

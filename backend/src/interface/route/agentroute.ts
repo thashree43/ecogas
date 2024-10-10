@@ -15,6 +15,7 @@ import multer from "multer";
 import multerS3 from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
 import { config } from "dotenv";
+import { agentauth } from "../middleware/agentauth";
 config();
 
 const s3Client = new S3Client({
@@ -92,18 +93,17 @@ const agentControllerInstance = new agentController(
 
 const router = Router();
 
-router.post(
-  "/apply",
-  upload.single("image"),
-  agentControllerInstance.agentregister
-);
+router.post("/apply", upload.single("image"), agentControllerInstance.agentregister);
 router.post("/agentlogin", agentControllerInstance.agentlogin);
-router.post("/addproduct", agentControllerInstance.addProduct);
-router.get("/getproduct", agentControllerInstance.listproduct);
-router.patch("/editproduct", agentControllerInstance.editproduct);
-router.delete("/deleteproduct/:id", agentControllerInstance.deleteProduct);
-router.get("/agentgetorders", agentControllerInstance.getordersin);
-router.patch("/orderstatus/:orderid", agentControllerInstance.statusupdate);
+router.post("/agentrefresh-token", (req, res, next) =>
+  agentControllerInstance.agentrefreshToken(req, res, next)
+);
+router.post("/addproduct", agentauth, agentControllerInstance.addProduct);
+router.get("/getproduct", agentauth, agentControllerInstance.listproduct);
+router.patch("/editproduct", agentauth, agentControllerInstance.editproduct);
+router.delete("/deleteproduct/:id", agentauth, agentControllerInstance.deleteProduct);
+router.get("/agentgetorders", agentauth, agentControllerInstance.getordersin);
+router.patch("/orderstatus/:orderid", agentauth, agentControllerInstance.statusupdate);
 export { router as agentroute };
 
 // Error handling middleware (add this to your main app file)

@@ -11,7 +11,6 @@ const UserProductroute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const navigate = useNavigate();
   const token = getToken("usertoken");
-console.log("the token be the this which have been provided from the userside ",token);
 
   useEffect(() => {
     if (!token) {

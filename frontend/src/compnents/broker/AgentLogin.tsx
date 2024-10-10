@@ -5,11 +5,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import loginAnimation from "../../Animation/Animation - 1725986382181 (1).json";
 import { validateInput, hasFormErrors } from "../../validationpages/validation";
-import { useAgentloginMutation } from "../../store/slice/Brokerslice";
+import {
+  useAgentloginMutation,
+  useAgentrefreshTokenMutation,
+} from "../../store/slice/Brokerslice";
 import { setagentInfo } from "../../store/slice/Agentauthslice";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import {FormData,FormErrors,AgentLoginResponse} from "../../interfacetypes/type"
+import {
+  FormData,
+  FormErrors,
+  AgentLoginResponse,
+} from "../../interfacetypes/type";
 
 const AgentLoginForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
@@ -21,6 +28,7 @@ const AgentLoginForm: React.FC = () => {
   const [serverError, setServerError] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [agentLogin] = useAgentloginMutation();
+  const [refreshtoken] = useAgentrefreshTokenMutation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -49,34 +57,45 @@ const AgentLoginForm: React.FC = () => {
     setServerError("");
 
     try {
-      const result = (await agentLogin(
-        formData
-      ).unwrap()) as AgentLoginResponse;
-      if (result.success) {
+      const result = await agentLogin(formData).unwrap();
+      const agentLoginResponse = result as unknown as AgentLoginResponse;
+
+      if (agentLoginResponse.success) {
         toast.success("Successfully logged in");
-        dispatch(setagentInfo(result.agent));
-        localStorage.setItem("agentToken", result.token);
-        localStorage.setItem("agentInfo", JSON.stringify(result.agent));
+        dispatch(setagentInfo(agentLoginResponse.agent));
+        localStorage.setItem("agentToken", agentLoginResponse.token);
+        localStorage.setItem(
+          "agentInfo",
+          JSON.stringify(agentLoginResponse.agent)
+        );
         navigate("/agent/dashboard");
       } else {
         throw new Error("Login failed");
       }
     } catch (error: any) {
-      console.error("Login failed:", error);
-      let errorMessage = "Failed to login. Please try again.";
-
-      if (error.status === "PARSING_ERROR") {
-        errorMessage = "Server error. Please try again later.";
-      } else if (error.data && typeof error.data === "string") {
+      if (error.status === 401) {
+        console.error("login failed", error);
         try {
-          const parsedError = JSON.parse(error.data);
-          errorMessage = parsedError.message || errorMessage;
-        } catch (e) {
-          console.error("Error parsing error response:", e);
+          console.log("the token set to refresh ");
+          const refreshedtoken = await refreshtoken().unwrap();
+          console.log("reached the refresh token",refreshedtoken);
+
+          localStorage.setItem("agentToken", refreshedtoken.token);
+          const retryRes = await agentLogin(formData).unwrap();
+          console.log("the refreshed token");
+
+          if (retryRes.success) {
+            navigate("/agent/dashboard");
+            console.log("done the refresh token ");
+          } else {
+            setLoginError(
+              "Login failed after token refresh. Please try again."
+            );
+          }
+        } catch (error) {
+          setLoginError("Your session has expired. Please log in again.");
         }
       }
-
-      setServerError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -136,7 +155,7 @@ const AgentLoginForm: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 mt-1 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 pr-10" // Increased padding on right
+              className="w-full px-3 py-2 mt-1 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 pr-10"
             />
             <FontAwesomeIcon
               icon={showPassword ? faEyeSlash : faEye}
@@ -175,3 +194,7 @@ const AgentLoginForm: React.FC = () => {
 };
 
 export default AgentLoginForm;
+
+function setLoginError(arg0: string) {
+  throw new Error("Function not implemented.");
+}

@@ -1,9 +1,34 @@
 import { error } from "console";
-import { agentModel, IagentData, IOrderData, orderModel } from "../database";
+import { agentModel, IagentData, IOrderData, IUserData, orderModel, userModel } from "../database";
 import { IadminRepository } from "../../domain";
 
 export class AdminRepository implements IadminRepository {
   constructor() {}
+  async findbyEmail(email: string): Promise<IUserData | null> {
+    return (await userModel.findOne({ email })) as IUserData;
+  }
+  async getall(): Promise<IUserData[] | null> {
+    try {
+      return await userModel.find().lean<IUserData[]>();
+      console.log("hello here reached");
+    } catch (error) {
+      throw new Error((error as Error).message);
+    }
+  }
+  async updatestatus(id: string, data: object): Promise<IUserData | null> {
+    try {
+      const updateduser = await userModel.findOneAndUpdate({ _id: id }, data, {
+        new: true,
+      });
+      if (!updateduser) {
+        throw new Error("the user may not found ");
+      }
+      return updateduser;
+    } catch (error) {
+      throw new Error("error in db while updating status in blocking the user");
+    }
+  }
+ 
 
   async getallagent(): Promise<IagentData[]> {
     try {

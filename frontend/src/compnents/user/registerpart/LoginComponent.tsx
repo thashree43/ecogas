@@ -1,9 +1,12 @@
+// LoginComponent.tsx
+
 import React, { useState } from "react";
 import Modal from "./Registermodal";
 import { validateInput, FormErrors } from "../../../validationpages/validation";
 import {
   useLoginMutation,
   useGoogleregisterMutation,
+  useRefreshtokenMutation,
 } from "../../../store/slice/Userapislice";
 import { useDispatch } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,7 +15,6 @@ import { setUserInfo } from "../../../store/slice/Authslice";
 import { Link, useNavigate } from "react-router-dom";
 import { TokenResponse, useGoogleLogin } from "@react-oauth/google";
 import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 interface LoginPageProps {
   isOpen: boolean;
@@ -31,6 +33,7 @@ const LoginComponent: React.FC<LoginPageProps> = ({
   const [errors, setErrors] = useState<FormErrors>({});
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginPost, { isLoading }] = useLoginMutation();
+  const [refreshtoken] = useRefreshtokenMutation();
   const [googleregister] = useGoogleregisterMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -55,10 +58,32 @@ const LoginComponent: React.FC<LoginPageProps> = ({
       dispatch(setUserInfo(user)); // Ensure user object has the token
       localStorage.setItem("userInfo", JSON.stringify(user)); // Store user info including token
       navigate("/");
+      setEmail("");
+      setPassword("");
       onClose();
       toast.success("Successfully logged in!");
     } catch (error: any) {
-      setLoginError(error?.data?.message || "An error occurred during login.");
+      if (error.status === 401) {
+        console.error("login failed", error);
+        try {
+          console.log("the token set to refresh ");
+          
+          const refreshResult = await refreshtoken({}).unwrap(); // Passing an empty object
+          console.log("reached the refresh token");
+          
+          localStorage.setItem("userToken", refreshResult.token);
+          const retryRes = await loginPost({ email, password }).unwrap(); // Declare retryRes here
+          console.log("the refreshed token");       
+          dispatch(setUserInfo(retryRes)); // Store the new user info
+          navigate("/"); // Navigate to the main page
+          setEmail("");
+          setPassword("");
+          onClose();
+          toast.success("Successfully logged in!");
+        } catch (refreshError: any) {
+          setLoginError("Login failed after token refresh. Please try again.");
+        }
+      }
     }
   };
 
@@ -69,11 +94,34 @@ const LoginComponent: React.FC<LoginPageProps> = ({
         dispatch(setUserInfo(response.user));
         localStorage.setItem("userInfo", JSON.stringify(response.user));
         navigate("/");
+        setEmail("");
+        setPassword("");
         onClose();
         toast.success("Successfully logged in with Google!");
       } catch (error: any) {
-        setLoginError("Google login failed.");
-        toast.error("Google login failed.");
+        console.log("abhiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
+        
+        if (error.status === 401) {
+          console.error("login failed", error);
+          try {
+            console.log("the token set to refresh ");
+            
+            const refreshResult = await refreshtoken({}).unwrap(); // Passing an empty object
+            console.log("reached the refresh token");
+            
+            localStorage.setItem("userToken", refreshResult.token);
+            const retryRes = await googleregister(token.access_token).unwrap(); // Declare retryRes here
+            console.log("the refreshed token");       
+            dispatch(setUserInfo(retryRes.user)); // Store the new user info
+            navigate("/"); // Navigate to the main page
+            setEmail("");
+            setPassword("");
+            onClose();
+            toast.success("Successfully logged in with Google!");
+          } catch (refreshError: any) {
+            setLoginError("Login failed after token refresh. Please try again.");
+          }
+        }
       }
     },
     onError: (error) => {
@@ -154,7 +202,7 @@ const LoginComponent: React.FC<LoginPageProps> = ({
                 id="password"
                 name="password"
                 value={password}
-                onChange={handleChange} // Removed duplicate onChange
+                onChange={handleChange}
                 className="w-full p-3 rounded-lg bg-gray-100 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 aria-label="Password"
                 required
@@ -176,58 +224,40 @@ const LoginComponent: React.FC<LoginPageProps> = ({
                   type="checkbox"
                   className="form-checkbox text-blue-500 bg-gray-100 border-gray-400 focus:ring-blue-500"
                 />
-                <span className="ml-2">Remember me</span>
+                <span className="ml-2">Remember Me</span>
               </label>
-              <Link
-                to="/resetpassword"
-                className="text-blue-500 hover:underline"
-              >
-                Forgot password?
+              <Link to="#" className="hover:text-blue-600">
+                Forgot Password?
               </Link>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              className={`w-full py-3 rounded-lg font-semibold text-white transition ${
-                isLoading ? "bg-gray-500" : "bg-blue-600 hover:bg-blue-700"
-              }`}
               disabled={isLoading}
+              className="w-full py-3 mt-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition focus:outline-none"
             >
-              {isLoading ? "Logging in..." : "Sign in to your account"}
+              {isLoading ? "Logging in..." : "Log In"}
             </button>
-
-            {/* Display Login Error */}
             {loginError && (
-              <p className="text-red-500 text-xs text-center">{loginError}</p>
+              <p className="text-red-500 text-xs mt-2 text-center">{loginError}</p>
             )}
           </form>
 
-          {/* Register Link */}
-          <div className="text-center text-sm text-gray-600">
-            <p>
-              Don't have an account?{" "}
-              <span
-                onClick={onRegisterClick}
-                className="text-blue-500 hover:underline cursor-pointer"
-              >
-                Sign up here
-              </span>
-            </p>
-          </div>
+          {/* Footer */}
+          <p className="text-center text-gray-600">
+            Don't have an account?{" "}
+            <button
+              type="button"
+              className="text-blue-600 hover:underline"
+              onClick={onRegisterClick}
+            >
+              Register
+            </button>
+          </p>
         </div>
       </Modal>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
+      <ToastContainer />
     </>
   );
 };

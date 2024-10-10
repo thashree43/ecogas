@@ -40,7 +40,11 @@ const ProfilePage = () => {
   const [addbook] = useAddbookMutation();
   const [deletebook] = useDeletebookMutation();
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-  const userId = userInfo._id;
+  console.log(userInfo,"the userInfo");
+  
+  const userId = userInfo.user._id;
+  console.log(userId,"the userid in getboook request");
+  
   
   const { data: userData, isLoading, isError ,refetch} = useGetbookQuery(userId);
 

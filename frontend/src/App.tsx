@@ -13,9 +13,9 @@ const App: React.FC = () => {
     <GoogleOAuthProvider clientId={"661435766183-j334nbfrs00te5ff5opomog4aid02m2b.apps.googleusercontent.com"}>
       <Provider store={store}>
      
+        <ToastContainer />
         <AppRoutes />
        
-        <ToastContainer />
       </Provider>
     </GoogleOAuthProvider>
   );

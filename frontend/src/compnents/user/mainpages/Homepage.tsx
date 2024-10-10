@@ -8,7 +8,7 @@ import animationData from '../../../Animation/Animation - 1724130371624.json'; /
 import entryAnimationData from '../../../Animation/Animation - 1724145569733.json'; // Your entry animation JSON file
 
 const Homepage: React.FC = () => {
-  const [isEntryScreenVisible, setIsEntryScreenVisible] = useState(true);
+  const [isEntryScreenVisible, setIsEntryScreenVisible] = useState(true);  
 
   useEffect(() => {
     const timer = setTimeout(() => {

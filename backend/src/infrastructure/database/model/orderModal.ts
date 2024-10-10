@@ -1,6 +1,7 @@
 import { Schema, model, Document, Types } from "mongoose";
 
 export interface IOrderData extends Document{
+    success: any;
     _id:Types.ObjectId;
     name:string;
     address:string;

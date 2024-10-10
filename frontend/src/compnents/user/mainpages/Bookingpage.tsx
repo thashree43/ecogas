@@ -43,7 +43,7 @@ const GasBookingPage: React.FC = () => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (storedUserInfo) {
       const parsedUserInfo = JSON.parse(storedUserInfo);
-      setUserId(parsedUserInfo._id);
+      setUserId(parsedUserInfo.user._id);
       console.log("The userId from the booking page", parsedUserInfo._id);
     }
   }, []); 
@@ -73,7 +73,7 @@ const GasBookingPage: React.FC = () => {
 
   useEffect(() => {
     if (userData) {
-      const firstBook = userData.book[0]; // Assuming we use the first booking entry
+      const firstBook = userData.book[0] || []; // Assuming we use the first booking entry
       setCustomerDetails({
         name: firstBook.name,
         consumerId: firstBook.consumerid.toString(),
@@ -82,6 +82,7 @@ const GasBookingPage: React.FC = () => {
       });
     }
   }, [userData]);
+console.log(userData,"the details for customer ");
 
   useEffect(() => {
     const loadDefaultAddress = async () => {
@@ -174,7 +175,11 @@ const GasBookingPage: React.FC = () => {
       try {
         console.log(bookingData, "the bookdatas");
         if (paymentMethod === "cod") {
+          console.log(bookingData,"the datatsssssssssssss");
+          
           const { data: orderResult, error: orderError } = await orderdata(bookingData);
+          console.log("hloooooooooooooooooooooooo");
+          
           if (orderError) {
             toast.error("Failed to create order. Please try again.");
             return;
@@ -211,6 +216,8 @@ const GasBookingPage: React.FC = () => {
         }
   
         const { data: orderResult, error: orderError } = await orderdata(datasbook);
+        console.log(orderResult,"orddrjihfifhfhiohfohfihhf");
+        
         if (orderError) {
           toast.error("Failed to create order. Please try again.");
           return;

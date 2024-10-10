@@ -2,7 +2,7 @@
 export * from "./entities/userentities"
 export * from "./entities/brokerentities"
 export * from "./entities/agentProduct"
-export * from "./entities/Bookentities"
+export * from "./entities/bookentities"
 export * from  "./entities/orderentities"
 
 // interfaces 

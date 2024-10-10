@@ -48,7 +48,7 @@ const OrderListCards: React.FC = () => {
   if (userInfoString) {
     try {
       const userInfo = JSON.parse(userInfoString);
-      userId = userInfo._id;
+      userId = userInfo.user._id;
     } catch (error) {
       console.error("Error parsing user info from localStorage:", error);
     }

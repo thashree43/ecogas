@@ -4,6 +4,7 @@ import { RootState, AppDispatch } from '../store/store';
 import { clearUserInfo } from '../store/slice/Authslice';
 import Logo from '/photo_2024-08-05_19-22-46.jpg';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 interface HeaderProps {
   onAccountClick: () => void;
@@ -22,7 +23,7 @@ const Header: React.FC<HeaderProps> = ({ onAccountClick }) => {
     console.log('User logged out');
     localStorage.removeItem('userInfo');
     dispatch(clearUserInfo());
-    
+    toast.success("Loggged out successfully!")
   };
   const handleHomeClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     e.preventDefault();

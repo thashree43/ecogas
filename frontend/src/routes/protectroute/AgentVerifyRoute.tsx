@@ -9,10 +9,8 @@ interface ProtectedRouteProps {
   const AgentVerifyRoute: React.FC<ProtectedRouteProps> = ({ component: Component }) => {
     const navigate = useNavigate();
     const tokens =getToken("agenttoken")
-    console.log("agent token in the adminagentverifyrouet ",tokens);
     
     const token = localStorage.getItem("agentToken");
-        console.log("The agent token is:", token);
   
     useEffect(() => {
       if (token) {

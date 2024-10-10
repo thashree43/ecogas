@@ -3,11 +3,9 @@ import { User, BookData, OrderData } from "../../domain";
 import { IagentData, IBookData, IOrderData, IUserData } from "../../infrastructure/database";
 
 export interface IUserRepository {
-  getall(): Promise<IUserData[] | null>;
   getbyId(id: string): Promise<IUserData | null>;
-  updatestatus(id: string, data: object): Promise<IUserData | null>;
-  findbyEmail(email: string): Promise<IUserData | null>;
   saveuser(user: User): Promise<IUserData>;
+  findbyEmail(email: string): Promise<IUserData | null>;
   findByGoogleId(googleId: string): Promise<IUserData | null>;
   updatePassword(email: string, password: string): Promise<boolean>;
   savebook(book: BookData): Promise<IBookData>;

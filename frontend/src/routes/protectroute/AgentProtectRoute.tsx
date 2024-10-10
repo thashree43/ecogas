@@ -9,22 +9,17 @@ interface ProtectedRouteProps {
 const AgentProtectRoute: React.FC<ProtectedRouteProps> = ({ component: Component }) => {
     const navigate = useNavigate();
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-    console.log("AgentProtectRoute rendered");
 
     useEffect(() => {
         const checkAuth = () => {
             const tokens = getToken("agentToken")
-            console.log("the agent tokens in the adminagentprotect",tokens);
             
             const token = localStorage.getItem("agentToken");
-            console.log("AgentProtectRoute - token:", token);
 
             if (!token) {
-                console.log("No token, navigating to login");
                 setIsAuthenticated(false);
                 navigate("/agent/login");
             } else {
-                console.log("Token found, user is authenticated");
                 setIsAuthenticated(true);
             }
         };

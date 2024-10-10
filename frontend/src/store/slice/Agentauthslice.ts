@@ -9,7 +9,7 @@ interface AgentState {
 }
 
 const initialState: AgentState = {
-  agentInfo: null,
+  agentInfo: null
 };
 
 const agentAuthSlice = createSlice({

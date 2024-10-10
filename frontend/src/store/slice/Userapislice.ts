@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { BaseQueryFn, createApi, FetchArgs, fetchBaseQuery, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { baseurluser } from "../api";
 import { HttpMethod } from "../../schema/httpmethod";
 
@@ -48,12 +48,104 @@ interface GasProvider {
   }>;
 }
 
+interface RefreshTokenResponse {
+  token: string;
+}
+const baseQuery = fetchBaseQuery({
+  baseUrl: baseurluser,
+  credentials: 'include',
+  prepareHeaders: (headers, { getState }) => {
+    console.log("prepareHeaders function called");
+    
+    const token = localStorage.getItem("userToken");
+    console.log("Token from localStorage:", token);
+
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+      console.log("Authorization header set:", headers.get('Authorization'));
+    } else {
+      console.log("No token found in localStorage");
+    }
+
+    console.log("All headers:");
+    headers.forEach((value, key) => {
+      console.log(`${key}: ${value}`);
+    });
+
+    return headers;
+  },
+});
+const baseQueryWithReauth: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  let result = await baseQuery(args, api, extraOptions);
+
+  if (result.error && result.error.status === 401) {
+    console.log("Token expired, attempting to refresh...");
+
+    const refreshResult = await baseQuery(
+      { url: '/userrefresh-token', method: 'POST' },
+      api,
+      extraOptions
+    );
+
+    if (refreshResult.data) {
+      const newToken = (refreshResult.data as RefreshTokenResponse).token;
+
+      console.log(newToken,"the newtoken  in the uuser side ");
+      
+      localStorage.setItem("userToken", newToken);
+
+      const fetchArgs = typeof args === 'string' ? { url: args } : args;
+
+      let newHeaders: HeadersInit;
+      
+      if (fetchArgs.headers instanceof Headers) {
+        newHeaders = new Headers(fetchArgs.headers);
+      } else if (Array.isArray(fetchArgs.headers)) {
+        newHeaders = fetchArgs.headers.reduce((acc, [key, value]) => {
+          if (key && value) acc[key] = value;
+          return acc;
+        }, {} as Record<string, string>);
+      } else if (typeof fetchArgs.headers === 'object' && fetchArgs.headers !== null) {
+        newHeaders = fetchArgs.headers as Record<string, string>;
+      } else {
+        newHeaders = {};
+      }
+
+      if (newHeaders instanceof Headers) {
+        newHeaders = Object.fromEntries(newHeaders.entries());
+      }
+
+      newHeaders = {
+        ...newHeaders,
+        'Authorization': `Bearer ${newToken}`
+      };
+
+      console.log("New headers after refresh:", newHeaders);
+
+      result = await baseQuery(
+        {
+          ...fetchArgs,
+          headers: newHeaders,
+        },
+        api,
+        extraOptions
+      );
+    } else {
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("refreshToken");
+    }
+  }
+
+  return result;
+};
+
 export const userApislice = createApi({
   reducerPath: "userApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: baseurluser,
-    credentials: "include",
-  }),
+  baseQuery:baseQueryWithReauth,
   tagTypes: ['User','GasProviders'],
   endpoints: (builder) => ({
     registerPost: builder.mutation({
@@ -84,6 +176,12 @@ export const userApislice = createApi({
         body: { email, password },
       }),
     }),
+    refreshtoken:builder.mutation({
+      query:()=>({
+        url:"/userrefresh-token",
+        method:"POST"
+      })
+    }),
     googleregister: builder.mutation({
       query: (postData) => ({
         url: "/google-login",
@@ -112,51 +210,12 @@ export const userApislice = createApi({
         body: postdata,
       }),
     }),
-    adminlogin: builder.mutation({
-      query: ({ email, password }) => ({
-        url: "/adminlogin",
-        method: "POST",
-        body: { email, password },
-      }),
-    }),
-    getusers: builder.query<User[], void>({
-      query: () => "/get_user",
-      providesTags: ['User'],
-    }),
     
-    updatestatus: builder.mutation<{ success: boolean }, { id: string; is_blocked: boolean }>({
-      query: ({ id, is_blocked }) => ({
-        url: `/updatestatus/${id}`,
-        method: "PATCH",
-        body: { is_blocked },
-      }),
-      async onQueryStarted({ id, is_blocked }, { dispatch, queryFulfilled }) {
-        const patchResult = dispatch(
-          userApislice.util.updateQueryData('getusers', undefined, (draft) => {
-            const user = draft.find((user) => user._id === id);
-            if (user) {
-              user.is_blocked = is_blocked;
-            }
-          })
-        );
-        try {
-          await queryFulfilled;
-        } catch {
-          patchResult.undo();
-        }
-      },
-    }),
      getProviders: builder.query<GasProvider[], string>({
       query: (pincode) => `/gas-providers/${pincode}`,
       providesTags: ['GasProviders'],
     }),
-    // bookGas: builder.mutation<{ success: boolean }, BookingRequest>({
-    //   query: (bookingData) => ({
-    //     url: "/book-gas",
-    //     method: HttpMethod.POST,
-    //     body: bookingData,
-    //   }),
-    // }),
+    
     addbook:builder.mutation({
       query:(formdata)=>({
         url:'/addbook',
@@ -204,13 +263,11 @@ export const {
   useVerifyOtpMutation,
   useResentotpMutation,
   useLoginMutation,
+  useRefreshtokenMutation,
   useGoogleregisterMutation,
   useForgotPasswordMutation,
   useResetpasswordMutation,
   useResendOtpMutation,
-  useAdminloginMutation,
-  useGetusersQuery,
-  useUpdatestatusMutation,
   useGetProvidersQuery,
   useAddbookMutation,
   useGetbookQuery,

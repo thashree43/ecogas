@@ -4,19 +4,29 @@ import {
   FormErrors,
   isFormEmpty,
 } from "../../validationpages/validation"; 
-import { useAdminloginMutation } from "../../store/slice/Userapislice";
+import { useAdminloginMutation, useRefreshTokenMutation, } from "../../store/slice/Adminslice";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-
+interface LoginResponse {
+  success: boolean;
+  token: string;
+  refreshToken: string;
+  admin?: {
+    _id: string;
+    email: string;
+  };
+}
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [loginError, setLoginError] = useState<string>("");
   const navigate = useNavigate();
-  const [adminlogin] = useAdminloginMutation();
+  const [adminLogin] = useAdminloginMutation();
+  const [refreshToken] = useRefreshTokenMutation();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -25,37 +35,47 @@ const Login: React.FC = () => {
     } else if (name === "password") {
       setPassword(value);
     }
+    setLoginError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const formErrors: FormErrors = {
-      email: validateInput("email", email),
-      password: validateInput("password", password),
-    };
-
-    if (isFormEmpty({ email, password })) {
-      formErrors.global = "All fields are required.";
-    }
-
-    setErrors(formErrors);
-
-    if (!Object.values(formErrors).some((error) => error !== "")) {
-      setIsSubmitting(true);
-      try {
-        const res = await adminlogin({ email, password }).unwrap();
-        console.log("the res from the backend ", res);
-
-        if (res.success) {
-          console.log("The admin has been logged in successfully", res.success);
-          localStorage.setItem("adminToken", res.admin);
-          navigate("/admin/dashboard");
+    try {
+      const res = await adminLogin({ email, password }).unwrap() as unknown as  LoginResponse;
+      if (res.success) {
+        localStorage.setItem("adminToken", res.token);
+        // localStorage.setItem("refreshToken", res.refreshToken);
+        navigate("/admin/dashboard");
+      } else {
+        setLoginError("Login failed. Please check your credentials and try again.");
+      }
+    } catch (error: any) {
+      if (error.status === 401) {
+        console.error("login failed",error);
+        
+        
+        try {
+          console.log("the token set to refresh ");
+          
+          const refreshResult = await refreshToken().unwrap();
+          console.log("reached the refresh token");
+          
+          localStorage.setItem("adminToken", refreshResult.token);
+          const retryRes = await adminLogin({ email, password }).unwrap();
+          console.log("the refreshed token");
+          
+            if (retryRes.success) {
+              navigate("/admin/dashboard");
+              console.log("done the refresh token ");
+              
+            } else {
+              setLoginError("Login failed after token refresh. Please try again.");
+            }
+        } catch {
+          setLoginError("Your session has expired. Please log in again.");
         }
-      } catch (error) {
-        console.error("Login failed:", error);
-      } finally {
-        setIsSubmitting(false);
+      } else {
+        setLoginError("An error occurred. Please try again later.");
       }
     }
   };
@@ -84,6 +104,17 @@ const Login: React.FC = () => {
         Admin Login
       </h2>
       <form onSubmit={handleSubmit}>
+        {loginError && (
+          <div style={{ 
+            backgroundColor: "#ffebee", 
+            color: "#c62828", 
+            padding: "10px", 
+            borderRadius: "4px", 
+            marginBottom: "20px" 
+          }}>
+            {loginError}
+          </div>
+        )}
         <div style={{ marginBottom: "20px" }}>
           <label
             htmlFor="email"
@@ -116,7 +147,7 @@ const Login: React.FC = () => {
             <p style={{ color: "#dc3545", marginTop: "5px" }}>{errors.email}</p>
           )}
         </div>
-        <div style={{ marginBottom: "20px" }} className="relative">
+        <div style={{ marginBottom: "20px" }}>
           <label
             htmlFor="password"
             style={{
@@ -128,59 +159,54 @@ const Login: React.FC = () => {
           >
             Password
           </label>
-          <input
-            type={showPassword ? "text" : "password"}
-            id="password"
-            name="password"
-            value={password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-            required
-            autoComplete="current-password"
-            style={{
-              width: "100%",
-              padding: "12px",
-              border: `1px solid ${errors.password ? "#dc3545" : "#ccc"}`,
-              borderRadius: "6px",
-              fontSize: "16px",
-            }}
-          />
-          <FontAwesomeIcon
-            icon={showPassword ? faEyeSlash : faEye}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-            onClick={() => setShowPassword((prev) => !prev)}
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              id="password"
+              name="password"
+              value={password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              required
+              style={{
+                width: "100%",
+                padding: "12px",
+                border: `1px solid ${errors.password ? "#dc3545" : "#ccc"}`,
+                borderRadius: "6px",
+                fontSize: "16px",
+              }}
+            />
+            <span
+              onClick={() => setShowPassword((prev) => !prev)}
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                cursor: "pointer",
+              }}
+            >
+              <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+            </span>
+          </div>
           {errors.password && (
-            <p style={{ color: "#dc3545", marginTop: "5px" }}>
-              {errors.password}
-            </p>
+            <p style={{ color: "#dc3545", marginTop: "5px" }}>{errors.password}</p>
           )}
         </div>
-        {errors.global && (
-          <p style={{ color: "#dc3545", marginBottom: "15px" }}>
-            {errors.global}
-          </p>
-        )}
         <button
           type="submit"
+          disabled={isSubmitting}
           style={{
             width: "100%",
-            padding: "14px",
-            backgroundColor: "#007bff",
-            color: "#fff",
+            padding: "12px",
             border: "none",
             borderRadius: "6px",
-            cursor: "pointer",
+            backgroundColor: "#007bff",
+            color: "#fff",
             fontSize: "16px",
-            transition: "background-color 0.3s ease",
+            cursor: "pointer",
+            opacity: isSubmitting ? 0.7 : 1,
           }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.backgroundColor = "#0056b3")
-          }
-          onMouseOut={(e) =>
-            (e.currentTarget.style.backgroundColor = "#007bff")
-          }
-          disabled={isSubmitting}
         >
           {isSubmitting ? "Logging in..." : "Login"}
         </button>

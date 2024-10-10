@@ -5,13 +5,8 @@ import { BookData, OrderData, User } from "../../domain";
 import { Types } from "mongoose";
 
 export class UserRepository implements IUserRepository {
-  async getall(): Promise<IUserData[] | null> {
-    try {
-      return await userModel.find().lean<IUserData[]>();
-      console.log("hello here reached");
-    } catch (error) {
-      throw new Error((error as Error).message);
-    }
+  async findbyEmail(email: string): Promise<IUserData | null> {
+    return (await userModel.findOne({ email })) as IUserData;
   }
   async getbyId(id: string): Promise<IUserData | null> {
     try {
@@ -20,22 +15,6 @@ export class UserRepository implements IUserRepository {
     } catch (error) {
       throw new Error("error in db");
     }
-  }
-  async updatestatus(id: string, data: object): Promise<IUserData | null> {
-    try {
-      const updateduser = await userModel.findOneAndUpdate({ _id: id }, data, {
-        new: true,
-      });
-      if (!updateduser) {
-        throw new Error("the user may not found ");
-      }
-      return updateduser;
-    } catch (error) {
-      throw new Error("error in db while updating status in blocking the user");
-    }
-  }
-  async findbyEmail(email: string): Promise<IUserData | null> {
-    return (await userModel.findOne({ email })) as IUserData;
   }
 
   async saveuser(userData: User): Promise<IUserData> {

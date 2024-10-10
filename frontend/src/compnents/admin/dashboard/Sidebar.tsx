@@ -4,16 +4,27 @@ import { FaUserNinja } from "react-icons/fa6";
 import { MdOutlineSupportAgent } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import {useLogoutMutation} from "../../../store/slice/Adminslice"
 
 const Sidebar: React.FC = () => {
+  const [logout] = useLogoutMutation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    toast.success("Logout successful");
-    navigate("/admin/login");
+  const handleLogout = async () => {
+    try {
+      await logout().unwrap(); 
+
+      localStorage.clear();
+      sessionStorage.clear();
+
+      toast.success("Logout successful");
+      navigate("/admin/login"); 
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast.error("Logout failed. Please try again.");
+    }
   };
+
 
   return (
     <div style={sidebarStyle}>

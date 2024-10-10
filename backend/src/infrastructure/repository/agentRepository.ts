@@ -5,15 +5,12 @@ import {
   IagentData,
   IProductDocument,
   productModel,
-  userModel,
-  IUserData,
   IOrderData,
-  orderModel
+  orderModel,
 } from "../../infrastructure/database";
 import { Agent, AgentProduct } from "../../domain";
 
 export class AgentRepository implements IAgentRepository {
- 
   async saveagent(agentdata: Agent): Promise<IagentData> {
     try {
       const newagent = new agentModel({
@@ -32,6 +29,7 @@ export class AgentRepository implements IAgentRepository {
       throw error;
     }
   }
+
   async findemail(email: string): Promise<IagentData | null> {
     try {
       const agent = (await agentModel.findOne({ email })) as IagentData;
@@ -44,9 +42,9 @@ export class AgentRepository implements IAgentRepository {
 
   async findByPincode(pincode: string): Promise<IagentData[]> {
     try {
-      const agentdata = (await agentModel.find({
-        pincode: pincode,
-      }).populate("products")) as IagentData[];
+      const agentdata = (await agentModel
+        .find({ pincode: pincode })
+        .populate("products")) as IagentData[];
       return agentdata;
     } catch (error) {
       console.error("Error finding agents by pincode:", error);
@@ -54,61 +52,81 @@ export class AgentRepository implements IAgentRepository {
     }
   }
 
-  async addproduct(productData: AgentProduct, agentId: string): Promise<IProductDocument | null> {    
-    try {      
-      const agent = await agentModel.findById(agentId).populate<{ products: IProductDocument[] }>('products');              
-      if (!agent) {        
-        throw new Error("Agent not found");      
+  async addproduct(
+    productData: AgentProduct,
+    agentId: string
+  ): Promise<IProductDocument | null> {
+    try {
+      const agent = await agentModel
+        .findById(agentId)
+        .populate<{ products: IProductDocument[] }>("products");
+      if (!agent) {
+        throw new Error("Agent not found");
       }
 
-      const normalizedCompanyName = productData.companyname.toLowerCase(); 
-      
+      const normalizedCompanyName = productData.companyname.toLowerCase();
+
       // Check if the product already exists
-      const existingProduct = agent.products.find((product) => product.companyname.toLowerCase() === normalizedCompanyName); 
-      
-      if (existingProduct) {        
-        console.log("Product with the same company name already exists. Returning existing product.");        
-        return existingProduct;      
-      } 
+      const existingProduct = agent.products.find(
+        (product) => product.companyname.toLowerCase() === normalizedCompanyName
+      );
+
+      if (existingProduct) {
+        console.log(
+          "Product with the same company name already exists. Returning existing product."
+        );
+        return existingProduct;
+      }
 
       // Create and save the new product if it does not exist
-      const newProduct = new productModel(productData); 
-      const savedProduct = await newProduct.save(); 
+      const newProduct = new productModel(productData);
+      const savedProduct = await newProduct.save();
 
-      await this.linkProductToAgent(agentId, savedProduct._id); 
-      return savedProduct;    
-
-    } catch (error) {      
-      console.error("Error adding product:", error);      
-      throw error;    
-    }  
-  } 
-
-  async linkProductToAgent(agentId: string, productId: Types.ObjectId): Promise<void> {    
-    try {      
-      await agentModel.findByIdAndUpdate(agentId, {        
-        $push: { products: productId },      
-      });    
-    } catch (error) {      
-      console.error("Error linking product to agent:", error);      
-      throw error;    
-    }  
+      await this.linkProductToAgent(agentId, savedProduct._id);
+      return savedProduct;
+    } catch (error) {
+      console.error("Error adding product:", error);
+      throw error;
+    }
   }
 
-  async getallproduct(agentId: Types.ObjectId): Promise<IProductDocument[] | null> {
+  async linkProductToAgent(
+    agentId: string,
+    productId: Types.ObjectId
+  ): Promise<void> {
     try {
-      const agent = await agentModel.findById(agentId).populate<{ products: IProductDocument[] }>('products');
-      
-      if (agent && agent.products && agent.products.length > 0) {
+      await agentModel.findByIdAndUpdate(agentId, {
+        $push: { products: productId },
+      });
+    } catch (error) {
+      console.error("Error linking product to agent:", error);
+      throw error;
+    }
+  }
+
+  async getallproduct(agentId: Types.ObjectId): Promise<IProductDocument[]> {
+    try {
+      const agent = await agentModel
+        .findById(agentId)
+        .populate<{ products: IProductDocument[] }>("products");
+
+      if (!agent) {
+        console.error(`No agent found with ID: ${agentId}`);
+        return []; // Return an empty array if agent not found
+      }
+
+      if (agent.products && agent.products.length > 0) {
         return agent.products;
       } else {
-        return null;
+        console.log(`No products found for agent: ${agent.agentname}`);
+        return []; // Return empty array if no products found
       }
     } catch (error) {
       console.error("Error getting all products for agent:", error);
       throw new Error("Error getting all products for agent");
     }
   }
+
   async findbyid(_id: Schema.Types.ObjectId): Promise<IProductDocument | null> {
     try {
       return await productModel.findById(_id).exec();
@@ -123,7 +141,7 @@ export class AgentRepository implements IAgentRepository {
     updateData: Partial<IProductDocument>
   ): Promise<IProductDocument | null> {
     try {
-      console.log("the repository reachhed to updateproduct");
+      console.log("The repository reached to updateProduct");
       const data = await productModel
         .findByIdAndUpdate(_id, updateData, { new: true })
         .exec();
@@ -141,7 +159,7 @@ export class AgentRepository implements IAgentRepository {
       const product = await productModel.findById(id);
       if (!product) {
         throw new Error("Product not found");
-      }  
+      }
 
       await agentModel.updateMany(
         { products: id },
@@ -159,16 +177,17 @@ export class AgentRepository implements IAgentRepository {
       throw new Error("Failed to delete product and unlink from agents");
     }
   }
+
   async getordersin(agentId: Types.ObjectId | string): Promise<IagentData | null> {
     try {
       const datas = await agentModel.findById(agentId).populate("orders");
-      
       return datas;
     } catch (error) {
       console.error(error);
       return null;
     }
   }
+
   async updatestatus(id: Types.ObjectId | string): Promise<IOrderData | null> {
     try {
       const result = await orderModel.findByIdAndUpdate(
