@@ -1,8 +1,11 @@
 import { agentModel, IagentData, IBookData, IOrderData, IUserData, orderModel, productModel } from "../../infrastructure/database";
-import { IUserRepository } from "../../domain";
+import { IChatData, IUserRepository } from "../../domain";
 import { userModel, bookModel } from "../../infrastructure/database"; // Import userModel if not already
 import { BookData, OrderData, User } from "../../domain";
 import { Types } from "mongoose";
+import {ChatModel} from "../database/model/chatModel";
+import messageModel, { IMessageData } from "../database/model/messageModel";
+import { Message } from "../../domain/entities/messageentities";
 
 export class UserRepository implements IUserRepository {
   async findbyEmail(email: string): Promise<IUserData | null> {
@@ -135,5 +138,67 @@ export class UserRepository implements IUserRepository {
       throw new Error("Error occurred while fetching orders");
     }
   }
+  async userchating(userId: Types.ObjectId | string): Promise<{ chatId: string; messages: any[]; user: IUserData }> {
+    try {
+        const user = await userModel.findById(userId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const admin = await userModel.findOne({ is_admin: true });
+        if (!admin) {
+            throw new Error("Admin not found");
+        }
+
+        let chat = await ChatModel.findOne({
+            user: userId,
+            admin: admin._id
+        }).populate('latestmessage');
+
+        if (!chat) {
+            chat = await ChatModel.create({
+                chatname: `Chat with ${user.username}`,
+                admin: [admin._id],
+                user: [userId],
+                latestmessage: []
+            });
+        }
+
+        return {
+            chatId: chat._id.toString(),
+            messages: chat.latestmessage,
+            user: user.toObject()
+        };
+    } catch (error) {
+        console.error("Error in userchating:", error);
+        throw error;
+    }
+}
+async saveMessage(messagedata: any): Promise<Message> {   // Corrected the return type to Message
+  const newMessage = new messageModel(messagedata);
+  return await newMessage.save();                         // Corrected save logic
+}
+
+async findmessagebyid(messageId: Types.ObjectId | string): Promise<Message | null> {  // Corrected return type
+  return await messageModel.findById(messageId).populate("sender").populate("chat");  // Fixed `populate` to use correct fields
+}
+async updateLatestMessage(chatId: Types.ObjectId | string, messageId: Types.ObjectId | string): Promise<void> {
+  await ChatModel.findByIdAndUpdate(
+      chatId,
+      { $push: { latestmessage: messageId } }, 
+      { new: true } 
+  );
+}
+async getmessages(chatid: Types.ObjectId | string): Promise<IMessageData | null> {
+  try {
+    const res = await messageModel.find({chat:chatid})
+    
+    return res as unknown as IMessageData;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
 }
 

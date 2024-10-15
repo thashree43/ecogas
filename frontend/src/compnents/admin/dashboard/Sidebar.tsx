@@ -58,6 +58,13 @@ const Sidebar: React.FC = () => {
         >
           <FaShoppingCart /> Orders
         </li>
+       
+        <li
+          style={{...menuItemStyle,backgroundColor: "#f8d7da" }}
+          onClick={() => navigate("/admin/dashboard/customexp")}
+        >
+          <FaBell /> Customes
+        </li>
         <li style={menuItemStyle} onClick={handleLogout}>
           <FaSignOutAlt /> Log-out
         </li>

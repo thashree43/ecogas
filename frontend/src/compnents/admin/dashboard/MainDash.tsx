@@ -6,6 +6,7 @@ import Sidebar from "./Sidebar";
 import UserList from '../Userlisting';
 import AgentList from '../Agentlisting';
 import OrdersPage from '../Orderlisting';
+import CustomerExperience from '../CustomExp';
 
 const Dashboard: React.FC = () => {
   return (
@@ -17,6 +18,7 @@ const Dashboard: React.FC = () => {
           <Route path="users" element={<UserList />} />
           <Route path='agents' element={<AgentList/>} />
           <Route path='orders' element ={<OrdersPage/>}/>
+          <Route path='customexp' element={<CustomerExperience/>}/>
         </Routes>
       </div>
     </div>

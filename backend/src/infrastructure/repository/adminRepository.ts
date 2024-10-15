@@ -1,6 +1,8 @@
 import { error } from "console";
-import { agentModel, IagentData, IOrderData, IUserData, orderModel, userModel } from "../database";
-import { IadminRepository } from "../../domain";
+import { agentModel, IagentData, IMessageData, IOrderData, IUserData, orderModel, userModel } from "../database";
+import { IadminRepository, IChatData } from "../../domain";
+import {ChatModel} from "../database/model/chatModel";
+import messageModel from "../database/model/messageModel";
 
 export class AdminRepository implements IadminRepository {
   constructor() {}
@@ -60,5 +62,45 @@ export class AdminRepository implements IadminRepository {
       throw new Error("Error fetching orders");
     }
   }
-  
+  async getcustomers(): Promise<IChatData[]> {
+    try {
+      const datas = await ChatModel
+        .find()
+        .populate("user", "username email")
+        .populate("latestmessage", "content createdAt")
+        .sort({ updatedAt: -1 });
+      return datas;
+    } catch (error) {
+      console.error(error);
+      throw new Error("Error fetching customers");
+    }
+  }
+  async getMessages(chatId: string): Promise<IMessageData[]> {
+    try {
+      const messages = await messageModel.find({ chat: chatId })
+        .sort({ createdAt: 1 })
+        .populate('sender', 'username');
+      return messages;
+    } catch (error) {
+      console.error(error);
+      throw new Error("Error fetching messages");
+    }
+  }
+
+  async sendMessage(chatId: string, adminId: string, content: string): Promise<IMessageData> {
+    try {
+      const newMessage = await messageModel.create({
+        sender: adminId,
+        content: content,
+        chat: chatId,
+      });
+
+      await ChatModel.findByIdAndUpdate(chatId, { latestmessage: newMessage._id });
+
+      return newMessage;
+    } catch (error) {
+      console.error(error);
+      throw new Error("Error sending message");
+    }
+  }
 }

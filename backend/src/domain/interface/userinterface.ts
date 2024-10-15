@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
-import { User, BookData, OrderData } from "../../domain";
+import { User, BookData, OrderData, IChatData } from "../../domain";
 import { IagentData, IBookData, IOrderData, IUserData } from "../../infrastructure/database";
+import { IMessageData } from "../entities/messageentities";
 
 export interface IUserRepository {
   getbyId(id: string): Promise<IUserData | null>;
@@ -22,4 +23,9 @@ export interface IUserRepository {
     orderId: string | Types.ObjectId
   ): Promise<IagentData | null>;
   listorder(id:Types.ObjectId | string):Promise<IUserData>
+  userchating(userId: Types.ObjectId | string): Promise<{ chatId: string; messages: any[]; user: IUserData }>;
+  saveMessage(messagedata: any): Promise<IMessageData>; // Add this line
+  findmessagebyid(messageId: Types.ObjectId | string): Promise<IMessageData | null>;
+  updateLatestMessage(chatId: Types.ObjectId | string, messageId: Types.ObjectId | string): Promise<void>;
+  getmessages(chatid:Types.ObjectId | string ):Promise<IMessageData | null>
 }

@@ -47,7 +47,13 @@ interface GasProvider {
     quantity: number;
   }>;
 }
-
+interface Message {
+  _id: string; 
+  content: string;
+  sender: string; 
+  createdAt: Date; 
+}
+type Messages = Message[];
 interface RefreshTokenResponse {
   token: string;
 }
@@ -255,6 +261,22 @@ export const userApislice = createApi({
     getorders: builder.query<{ orders: Order[] }, string>({
       query: (userId) => `/getorders/${userId}`,
     }),
+    userchat: builder.mutation<any, string>({
+      query: (userId) => ({
+        url: `/userchat/${userId}`,
+        method: "POST"
+      })
+    }),
+    sendmessage:builder.mutation({
+      query:({chatid,content})=>({
+        url:"/sendmessages",
+        method:"POST",
+        body:{chatid,content}
+      })
+    }),
+    getmessages:builder.query<Messages, string>({
+      query:(chatId)=>`/getmessage/${chatId}`
+    })
   }),
 });
 
@@ -273,6 +295,11 @@ export const {
   useGetbookQuery,
   useDeletebookMutation,
   useOrderthegasMutation,
-  useGetordersQuery
+  useGetordersQuery,
+ useUserchatMutation,
+ useSendmessageMutation,
+useGetmessagesQuery,
+
+  
 } = userApislice;
  

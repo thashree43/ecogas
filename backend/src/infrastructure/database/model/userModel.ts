@@ -1,6 +1,8 @@
 import { Schema, model, Document, ObjectId, Types } from "mongoose";
 
 export interface IUserData extends Document {
+  
+  messages: any[];
   products: any;
   _id: ObjectId;
   username: string;

@@ -47,7 +47,23 @@ interface OrderResponse {
 interface RefreshTokenResponse {
   token: string;
 }
+interface Message {
+  _id: string; 
+  content: string;
+  sender: string; 
+  createdAt: Date; 
+}
+type Messages = Message[];
+interface chat {
+  length: number;
+  map: any;
+  _id:string ;
+  chatname:string;
+  user:User[]
+  admin:User[]
+  latestmessages:Message[]
 
+}
 const baseQuery = fetchBaseQuery({
   baseUrl: basseurladmin,
   credentials: 'include',
@@ -222,6 +238,22 @@ export const adminApi = createApi({
         method: 'POST',
       }),
     }),
+    getcustomers: builder.query<chat[], void>({
+      query: () => '/getcustomer'
+    }),
+    getMessages: builder.query<Message[], string>({
+      query: (chatId) => `/getmessages/${chatId}`
+    }),
+    sendMessage: builder.mutation<void, { chatId: string, content: string, adminToken: string }>({
+      query: ({ chatId, content, adminToken }) => ({
+        url: '/sendmessage',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: { chatId, content }
+      })
+    })
   }),
 });
 
@@ -234,4 +266,8 @@ export const {
   useUpdateapprovalMutation,
   useGetfullordersQuery,
   useRefreshTokenMutation,
+  useGetcustomersQuery,
+  useGetMessagesQuery,
+  useSendMessageMutation,
+  
 } = adminApi;

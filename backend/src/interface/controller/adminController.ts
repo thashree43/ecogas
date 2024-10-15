@@ -8,10 +8,15 @@ import {
   getagentusecase,
   updateapprovalusecase,
   admingetallorderusecasse,
+  getcustomerusecase,
+  GetMessagesUseCase,
+  SendMessageUseCase,
+
 } from "../../usecase";
 import nodemailer from "nodemailer";
 import {generateRefreshToken, generatetoken} from "../../interface/middleware/authtoken"
 export class AdminController {
+ 
   
   constructor(
     private adminloginUsecase: Adminloginusecase,
@@ -19,7 +24,10 @@ export class AdminController {
     private updateUseCase:updateusecase,
     private getAgentUseCaseInstance: getagentusecase,
     private UpdateApprovalUseCaseInstance: updateapprovalusecase,
-    private AdminGetallOrdersInstance: admingetallorderusecasse
+    private AdminGetallOrdersInstance: admingetallorderusecasse,
+    private GetCustomeUseCaseInstance:getcustomerusecase,
+    private GetMessagesUseCaseInstance:GetMessagesUseCase,
+    private SendMessageUseCaseInstance:SendMessageUseCase
   ) {}
   async adminlogin(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { email, password } = req.body;
@@ -263,4 +271,41 @@ export class AdminController {
       console.error(error);
     }
   }
+  async getcustomers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const customersData = await this.GetCustomeUseCaseInstance.execute();
+      res.json(customersData);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error fetching customers" });
+    }
+  }
+  
+  async getMessages(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { chatId } = req.params;
+      const messages = await this.GetMessagesUseCaseInstance.execute(chatId);
+      res.json(messages);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error fetching messages" });
+    }
+  }
+
+  async sendMessage(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { chatId, content } = req.body;
+      console.log(chatId,"the whole datas");
+      
+      const adminId = (req as any).admin._id;
+      console.log(adminId,"the adminId in the control");
+      const message = await this.SendMessageUseCaseInstance.execute(chatId, adminId, content);
+      res.json(message);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error sending message" });
+    }
+  }
 }
+
+

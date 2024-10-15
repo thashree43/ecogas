@@ -63,6 +63,7 @@ const UserRoute: React.FC = () => {
         }
       />
      <Route path="/profile" element = {<ProfilePage/>}/>
+     
 
     </Routes>
   );

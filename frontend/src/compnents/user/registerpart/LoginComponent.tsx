@@ -91,8 +91,8 @@ const LoginComponent: React.FC<LoginPageProps> = ({
     onSuccess: async (token: TokenResponse) => {
       try {
         const response = await googleregister(token.access_token).unwrap();
-        dispatch(setUserInfo(response.user));
-        localStorage.setItem("userInfo", JSON.stringify(response.user));
+        dispatch(setUserInfo(response));
+        localStorage.setItem("userInfo", JSON.stringify(response));
         navigate("/");
         setEmail("");
         setPassword("");
@@ -112,8 +112,8 @@ const LoginComponent: React.FC<LoginPageProps> = ({
             localStorage.setItem("userToken", refreshResult.token);
             const retryRes = await googleregister(token.access_token).unwrap(); // Declare retryRes here
             console.log("the refreshed token");       
-            dispatch(setUserInfo(retryRes.user)); // Store the new user info
-            navigate("/"); // Navigate to the main page
+            dispatch(setUserInfo(retryRes.user)); 
+            navigate("/");
             setEmail("");
             setPassword("");
             onClose();

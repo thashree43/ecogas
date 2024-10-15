@@ -1,5 +1,6 @@
 // src/infrastructure/repository/interface/adminInterface.ts
-import { IagentData, IOrderData, IUserData } from "../../infrastructure/database";
+import { IagentData, IMessageData, IOrderData, IUserData } from "../../infrastructure/database";
+import { IChatData } from "../entities/chatentities";
 
 export interface IadminRepository {
     findbyEmail(email: string): Promise<IUserData | null>;
@@ -8,4 +9,7 @@ export interface IadminRepository {
     getallagent(): Promise<IagentData[] | null>;
     updateApproval(id:string,data:object):Promise<IagentData | null>
     allorders(): Promise<IOrderData[]>;
+    getcustomers():Promise<IChatData[] | null>
+    getMessages(chatId: string): Promise<IMessageData[]>;
+    sendMessage(chatId: string, adminId: string, content: string): Promise<IMessageData>;
 }

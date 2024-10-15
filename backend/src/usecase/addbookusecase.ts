@@ -25,9 +25,10 @@ export class addbookusecase {
 
     const existingBook = await bookModel.findOne({ mobile: mobile });
     if (existingBook) {
+      
       const error = new Error("The book already exists");
       (error as any).statusCode = 409;
-      throw error;
+      throw error;  
     }
 
     const bookData = new BookData({

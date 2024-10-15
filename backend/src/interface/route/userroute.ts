@@ -14,7 +14,10 @@ import {
   GetBookUseCase,
   deletebookusecase,
   orderplaceusecase,
-  listorderusersideusecase
+  listorderusersideusecase,
+  usechatusecase,
+  sendmessageusecase,
+  getmmessageusecase,
 } from "../../usecase";
 import {
   UserRepository,
@@ -63,6 +66,9 @@ const DeleteBookUseCaseInstance = new deletebookusecase(userRepositoryInstance);
 
 const OrderPlaceUseCaseInstance = new orderplaceusecase(userRepositoryInstance);
 const ListOrderUserSideUseCaseInstance = new listorderusersideusecase(userRepositoryInstance)
+const UserChatUseCaseInstance = new usechatusecase(userRepositoryInstance)
+const SendMessageUseCaseInstance = new sendmessageusecase(userRepositoryInstance)
+const GetMessageUseCaseInstance = new getmmessageusecase(userRepositoryInstance)
 // instances of the user controller
 const userControllerInstance = new userController(
   signupUseCaseInstance,
@@ -77,7 +83,10 @@ const userControllerInstance = new userController(
   GetBookUseCaseInstance,
   DeleteBookUseCaseInstance,
   OrderPlaceUseCaseInstance,
-  ListOrderUserSideUseCaseInstance
+  ListOrderUserSideUseCaseInstance,
+  UserChatUseCaseInstance,
+  SendMessageUseCaseInstance,
+  GetMessageUseCaseInstance
 );
 
 const router = Router();
@@ -98,8 +107,8 @@ router.post("/login", (req, res, next) =>
 router.post("/google-login", (req, res, next) =>
   userControllerInstance.googleAuth(req, res, next)
 );
-router.post("/userrefresh-token",(req,res,next)=>
-userControllerInstance.userrefreshtoken(req,res,next))
+router.post("/userrefresh-token", (req, res, next) =>
+  userControllerInstance.userrefreshtoken(req, res, next))
 router.post("/resetpassword", (req, res, next) =>
   userControllerInstance.forgetpassword(req, res, next)
 );
@@ -131,5 +140,19 @@ router.post("/ordergas", (req, res, next) =>
   userControllerInstance.orderplace(req, res, next)
 );
 
-router.get('/getorders/:id',userauth,(req,res,next)=>userControllerInstance.listorderuserside(req,res,next))
+router.get('/getorders/:id', userauth, (req, res, next) => userControllerInstance.listorderuserside(req, res, next))
+
+// chat routes 
+router.post('/userchat/:uderId', (req, res, next) =>
+  userControllerInstance.userchat(req, res, next))
+
+router.post('/sendmessages',(req,res,next)=>
+userControllerInstance.sendmessages(req,res,next))
+
+router.get("/getmessage/:chatid",(req,res,next)=>
+userControllerInstance.getmessages(req,res,next)
+)
+
+
 export { router as userroute };
+

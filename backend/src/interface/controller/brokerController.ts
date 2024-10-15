@@ -77,7 +77,7 @@ export class agentController {
         const refreshToken = generateRefreshToken({ id: response.agent._id.toString(), email });
 
         res.cookie("agentToken", token, {
-          maxAge: 1* 60 * 1000,
+          maxAge: 60* 60 * 1000,
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "strict",
