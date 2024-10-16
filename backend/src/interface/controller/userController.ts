@@ -582,7 +582,6 @@ export class userController {
     console.log(chatId, "the id for chat ");
     try {
       const messagesData = await this.Getmessageusecase.execute(chatId);
-      console.log(messagesData, "the messages");
 
       res.json(messagesData);
     } catch (error) {

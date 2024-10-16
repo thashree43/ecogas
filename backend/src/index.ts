@@ -1,14 +1,17 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import http from "http";
 import { Server, Socket } from "socket.io";
+import http from 'http'
+import {createServer} from 'http'
 import { userroute } from "./interface/route/userroute";
 import { agentroute } from "./interface/route/agentroute";
 import { adminroute } from "./interface/route/adminroute";
 import { connectDb } from "./infrastructure/database/mongoconnect";
 import logger from "../src/infrastructure/utilis/logger";
 import morgan from "morgan";
+import winston from "winston";
+import { ChatModel } from "./infrastructure/database";
 
 const port = 3000;
 
@@ -28,6 +31,24 @@ app.use(
 );
 
 // Setup Morgan for logging requests
+const log = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.DailyRotateFile({
+      filename: 'logs/application-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '1d'
+    })
+  ]
+});
+
+// Setup Morgan for logging requests
 const morganFormat = ":method :url :status :response-time ms";
 app.use(
   morgan(morganFormat, {
@@ -45,6 +66,7 @@ app.use(
   })
 );
 
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -53,31 +75,76 @@ app.use("/api/user", userroute);
 app.use("/api/admin", adminroute);
 app.use("/api/agent", agentroute);
 
+// socket chating part 
 const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
+const io = new Server(server,{
+  pingTimeout:60000,
+  cors:{
+    origin:'http://localhost:5173',
   },
+})
+
+io.on('connection', (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on('setup', (userId) => {
+    if (userId) {
+      socket.join(userId);
+      console.log("UserId:", userId);
+      socket.emit("connected");
+    } else {
+      console.log("User ID is undefined");
+    }
+  });
+
+  // Listen for the join chat event and log the room properly
+  socket.on("join chat", (room) => {
+    if (room && room._id) {
+      socket.join(room._id);
+      console.log("Room joined:", room._id);
+    } else {
+      console.log("Room ID is undefined");
+    }
+  });
+  socket.on("new message", async (newMessageReceived) => {
+    console.log("33333333333333333",newMessageReceived)
+
+    const chatId = newMessageReceived.chat[0]; 
+  try {
+    const chat = await ChatModel.findById(chatId)
+    // Make sure chat users are populated
+
+if (!chat ) {
+console.log("Chat or chat users not available:", chat);
+return;
+
+}
+const senderId = newMessageReceived.sender[0]
+const recipientIds = newMessageReceived.reciever[0]
+  console.log("8888888888888888888",recipientIds)
+    if (recipientIds.toString() !== senderId) {
+      console.log("55555555555555555555555555555555")
+      console.log(`sending message to recipient:`,recipientIds);
+      socket.in(recipientIds.toString()).emit("message recieved",newMessageReceived)
+      
+      
+    }
+
+  } catch (error) {
+    console.error("Error in new message event:", error);
+
+  }
+   
+    
+  });
+  
+
+
+  socket.on('disconnect', () => {
+    console.log("User disconnected:", socket.id);
+  });
 });
-
-// Listen for socket.io connections
-// io.on("connection", (socket: Socket) => {
-//   console.log("A client connected:", socket.id);
-
-//   // Handle disconnection
-//   socket.on("chat", chat => {
-//     io.emit("chat", chat)
-//   });
-
-//   socket.on("disconnect", () => {
-//     console.log("disconnected");
-
-//   });
-// });
-
-// Start the server
+  
 server.listen(port, () => {
   console.log(
     `The userside server has connected at http://localhost:${port}/api/user`

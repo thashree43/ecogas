@@ -8,15 +8,10 @@ import { useAdminloginMutation, useRefreshTokenMutation, } from "../../store/sli
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-interface LoginResponse {
-  success: boolean;
-  token: string;
-  refreshToken: string;
-  admin?: {
-    _id: string;
-    email: string;
-  };
-}
+import { useDispatch } from 'react-redux';
+import { setAdminInfo } from '../../store/slice/Admiauthslice';
+import {LoginResponse,loginResponse} from "../../interfacetypes/type"
+
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -24,6 +19,7 @@ const Login: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string>("");
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [adminLogin] = useAdminloginMutation();
   const [refreshToken] = useRefreshTokenMutation();
@@ -39,46 +35,42 @@ const Login: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await adminLogin({ email, password }).unwrap() as unknown as  LoginResponse;
-      if (res.success) {
-        localStorage.setItem("adminToken", res.token);
-        // localStorage.setItem("refreshToken", res.refreshToken);
-        navigate("/admin/dashboard");
-      } else {
-        setLoginError("Login failed. Please check your credentials and try again.");
-      }
-    } catch (error: any) {
-      if (error.status === 401) {
-        console.error("login failed",error);
-        
-        
-        try {
-          console.log("the token set to refresh ");
-          
-          const refreshResult = await refreshToken().unwrap();
-          console.log("reached the refresh token");
-          
-          localStorage.setItem("adminToken", refreshResult.token);
-          const retryRes = await adminLogin({ email, password }).unwrap();
-          console.log("the refreshed token");
-          
-            if (retryRes.success) {
-              navigate("/admin/dashboard");
-              console.log("done the refresh token ");
-              
-            } else {
-              setLoginError("Login failed after token refresh. Please try again.");
-            }
-        } catch {
-          setLoginError("Your session has expired. Please log in again.");
-        }
-      } else {
-        setLoginError("An error occurred. Please try again later.");
-      }
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
+    // Handle the login call first
+    const response = await adminLogin({ email, password }).unwrap() as unknown as loginResponse;
+    if (response.success) {
+      dispatch(setAdminInfo(response));
+      localStorage.setItem("adminToken", response.token);
+      navigate("/admin/dashboard");
+    } else {
+      setLoginError("Login failed. Please check your credentials and try again.");
     }
-  };
+  } catch (error: any) {
+    if (error.status === 401) {
+      try {
+        const refreshResult = await refreshToken().unwrap() 
+        localStorage.setItem("adminToken", refreshResult.token);
+        // Retry login after token refresh
+        const retryRes = await adminLogin({ email, password }).unwrap()as unknown as loginResponse;
+        if (retryRes.success) {
+          dispatch(setAdminInfo(retryRes));
+          navigate("/admin/dashboard");
+        } else {
+          setLoginError("Login failed after token refresh. Please try again.");
+        }
+      } catch {
+        setLoginError("Your session has expired. Please log in again.");
+      }
+    } else {
+      setLoginError("An error occurred. Please try again later.");
+    }
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   return (
     <div

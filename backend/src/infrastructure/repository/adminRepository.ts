@@ -3,6 +3,8 @@ import { agentModel, IagentData, IMessageData, IOrderData, IUserData, orderModel
 import { IadminRepository, IChatData } from "../../domain";
 import {ChatModel} from "../database/model/chatModel";
 import messageModel from "../database/model/messageModel";
+import { Types } from "mongoose";
+import { Message } from "../../domain/entities/messageentities";
 
 export class AdminRepository implements IadminRepository {
   constructor() {}
@@ -102,5 +104,17 @@ export class AdminRepository implements IadminRepository {
       console.error(error);
       throw new Error("Error sending message");
     }
+  }
+  
+  async saveMessage(messagedata: any): Promise<IMessageData> {
+      const newMessage = new messageModel(messagedata)
+      return await newMessage.save()
+  }
+  async updateLatestMessage(chatId: Types.ObjectId | string, messageId: Types.ObjectId | string): Promise<void> {
+    await ChatModel.findByIdAndUpdate(
+        chatId,
+        { $push: { latestmessage: messageId } }, 
+        { new: true } 
+    );
   }
 }

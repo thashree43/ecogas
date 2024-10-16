@@ -17,7 +17,8 @@ import nodemailer from "nodemailer";
 import {generateRefreshToken, generatetoken} from "../../interface/middleware/authtoken"
 export class AdminController {
  
-  
+  private readonly jwtsecret: string; 
+  private readonly jwtRefreshSecret: string;
   constructor(
     private adminloginUsecase: Adminloginusecase,
     private getUserusecase:getuserusecase,
@@ -28,7 +29,44 @@ export class AdminController {
     private GetCustomeUseCaseInstance:getcustomerusecase,
     private GetMessagesUseCaseInstance:GetMessagesUseCase,
     private SendMessageUseCaseInstance:SendMessageUseCase
-  ) {}
+  ) {
+    const secret = process.env.JWT_ACCESS_SECRET;
+    const refreshSecret = process.env.JWT_REFRESH_SECRET;
+
+    if (!secret || !refreshSecret) {
+      throw new Error(
+        "JWT secrets (access/refresh) are not set in environment variables"
+      );
+    }
+
+    this.jwtsecret = secret;
+    this.jwtRefreshSecret = refreshSecret;
+  }
+
+
+  private verifyToken(token: string): {
+    id: string;
+    email: string;
+    iat: number;
+    exp: number;
+  } {
+    try {
+      return jwt.verify(token, this.jwtsecret) as {
+        id: string;
+        email: string;
+        iat: number;
+        exp: number;
+      };
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        throw new Error("Token expired");
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        throw new Error("Invalid token");
+      }
+      throw error;
+    }
+  }
+
   async adminlogin(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { email, password } = req.body;
 
@@ -297,9 +335,19 @@ export class AdminController {
       const { chatId, content } = req.body;
       console.log(chatId,"the whole datas");
       
-      const adminId = (req as any).admin._id;
+      const admintoken = req.cookies.adminToken;
+      if (!admintoken) {
+        res.status(401).json({ message: "Unauthorized: No token provided" });
+        return;
+      }
+      const decodedToken = this.verifyToken(admintoken);
+      const adminId = decodedToken.id
+
+
+
       console.log(adminId,"the adminId in the control");
-      const message = await this.SendMessageUseCaseInstance.execute(chatId, adminId, content);
+
+      const message = await this.SendMessageUseCaseInstance.execute(chatId,adminId, content);
       res.json(message);
     } catch (error) {
       console.error(error);

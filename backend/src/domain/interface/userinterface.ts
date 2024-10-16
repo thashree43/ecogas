@@ -24,8 +24,8 @@ export interface IUserRepository {
   ): Promise<IagentData | null>;
   listorder(id:Types.ObjectId | string):Promise<IUserData>
   userchating(userId: Types.ObjectId | string): Promise<{ chatId: string; messages: any[]; user: IUserData }>;
-  saveMessage(messagedata: any): Promise<IMessageData>; // Add this line
+  saveMessage(messagedata: any ): Promise<IMessageData>; // Add this line
   findmessagebyid(messageId: Types.ObjectId | string): Promise<IMessageData | null>;
   updateLatestMessage(chatId: Types.ObjectId | string, messageId: Types.ObjectId | string): Promise<void>;
-  getmessages(chatid:Types.ObjectId | string ):Promise<IMessageData | null>
+  getmessages(chatid:Types.ObjectId | string ):Promise<IMessageData| null>
 }

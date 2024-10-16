@@ -55,8 +55,8 @@ const LoginComponent: React.FC<LoginPageProps> = ({
 
     try {
       const user = await loginPost({ email, password }).unwrap();
-      dispatch(setUserInfo(user)); // Ensure user object has the token
-      localStorage.setItem("userInfo", JSON.stringify(user)); // Store user info including token
+      dispatch(setUserInfo(user));
+      localStorage.setItem("userInfo", JSON.stringify(user)); 
       navigate("/");
       setEmail("");
       setPassword("");
@@ -68,14 +68,14 @@ const LoginComponent: React.FC<LoginPageProps> = ({
         try {
           console.log("the token set to refresh ");
           
-          const refreshResult = await refreshtoken({}).unwrap(); // Passing an empty object
+          const refreshResult = await refreshtoken({}).unwrap();
           console.log("reached the refresh token");
           
           localStorage.setItem("userToken", refreshResult.token);
-          const retryRes = await loginPost({ email, password }).unwrap(); // Declare retryRes here
+          const retryRes = await loginPost({ email, password }).unwrap(); 
           console.log("the refreshed token");       
-          dispatch(setUserInfo(retryRes)); // Store the new user info
-          navigate("/"); // Navigate to the main page
+          dispatch(setUserInfo(retryRes)); 
+          navigate("/"); 
           setEmail("");
           setPassword("");
           onClose();
@@ -106,11 +106,11 @@ const LoginComponent: React.FC<LoginPageProps> = ({
           try {
             console.log("the token set to refresh ");
             
-            const refreshResult = await refreshtoken({}).unwrap(); // Passing an empty object
+            const refreshResult = await refreshtoken({}).unwrap();
             console.log("reached the refresh token");
             
             localStorage.setItem("userToken", refreshResult.token);
-            const retryRes = await googleregister(token.access_token).unwrap(); // Declare retryRes here
+            const retryRes = await googleregister(token.access_token).unwrap(); 
             console.log("the refreshed token");       
             dispatch(setUserInfo(retryRes.user)); 
             navigate("/");

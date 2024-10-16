@@ -246,7 +246,7 @@ export const adminApi = createApi({
     }),
     sendMessage: builder.mutation<void, { chatId: string, content: string, adminToken: string }>({
       query: ({ chatId, content, adminToken }) => ({
-        url: '/sendmessage',
+        url: `/sendmessage`,
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${adminToken}`

@@ -1,4 +1,5 @@
 // src/infrastructure/repository/interface/adminInterface.ts
+import { Types } from "mongoose";
 import { IagentData, IMessageData, IOrderData, IUserData } from "../../infrastructure/database";
 import { IChatData } from "../entities/chatentities";
 
@@ -12,4 +13,7 @@ export interface IadminRepository {
     getcustomers():Promise<IChatData[] | null>
     getMessages(chatId: string): Promise<IMessageData[]>;
     sendMessage(chatId: string, adminId: string, content: string): Promise<IMessageData>;
+    updateLatestMessage(chatId: Types.ObjectId | string, messageId: Types.ObjectId | string): Promise<void>;
+    saveMessage(messagedata: any): Promise<IMessageData>;
+
 }

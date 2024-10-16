@@ -179,8 +179,10 @@ async saveMessage(messagedata: any): Promise<Message> {   // Corrected the retur
   return await newMessage.save();                         // Corrected save logic
 }
 
-async findmessagebyid(messageId: Types.ObjectId | string): Promise<Message | null> {  // Corrected return type
-  return await messageModel.findById(messageId).populate("sender").populate("chat");  // Fixed `populate` to use correct fields
+async findmessagebyid(messageId: Types.ObjectId | string): Promise<Message | null> {
+  return await messageModel.findById(messageId)
+                           .populate("sender")
+                           .populate("chat.user");
 }
 async updateLatestMessage(chatId: Types.ObjectId | string, messageId: Types.ObjectId | string): Promise<void> {
   await ChatModel.findByIdAndUpdate(

@@ -25,43 +25,57 @@ import {
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import OrderListTable from "./Mybooking";
-import socketIOClient from "socket.io-client";
+import socketIOClient, { Socket } from "socket.io-client";
 import { useDispatch } from "react-redux";
-
+import io from "socket.io-client";
+import { DefaultEventsMap } from "@socket.io/component-emitter";
 interface ChatPageProps {
   onClose: () => void;
   chatId?: string;
 }
-const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId = "" }) => {
-  const [userdata, setUserdata] = useState<{ username?: string; _id?: string } | null>(null);
+
+const ENDPOINTS = "http://localhost:3000";
+let socket: Socket<DefaultEventsMap, DefaultEventsMap>;
+
+const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
+  const [userdata, setUserdata] = useState<{
+    username?: string;
+    _id?: string;
+  } | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
-
+  const [sentMessages, setSentMessages] = useState<string[]>([]);
+  const [socketconnected,setSocketconnected] = useState(false)
   const [sendmessages] = useSendmessageMutation();
   const {
     data: messagesData,
     isLoading: messagesLoading,
     isError: messagesError,
-  } = useGetmessagesQuery(chatId);
+  } = useGetmessagesQuery(chatId || "");
 
-  // Socket.io client initialization
-  const socketio = socketIOClient("http://localhost:3000");
-
+  // Fetch user data from localStorage
   useEffect(() => {
-    socketio.on("chat", (message) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
-    });
+    // Initialize socket connection if not already initialized
+    if (!socket) {
+      socket = io(ENDPOINTS); // Your endpoint
+    }
+
+    if (userdata && userdata._id) {
+      socket.emit("setup", userdata._id); // Setting up socket with user ID
+      socket.on("connected", () => setSocketconnected(true));
+    }
 
     return () => {
-      socketio.off("chat");
+      socket.disconnect(); // Cleanup on component unmount
     };
-  }, []);
+  }, [userdata]);
 
+  // Join the chat room when the chatId is available
   useEffect(() => {
-    if (messagesData) {
-      setMessages(messagesData); // Assuming messagesData is an array of messages
+    if (chatId) {
+      socket.emit("join chat", { _id: chatId });
     }
-  }, [messagesData]);
+  }, [chatId]);
 
   // Load user data from localStorage
   useEffect(() => {
@@ -76,29 +90,62 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId = "" }) => {
     }
   }, []);
 
-  const handleSendMessage = async () => {
-    if (!currentMessage.trim()) return;
+  // Fetch messages from server and listen for new socket messages
+  useEffect(() => {
+    if (messagesData) {
+      setMessages(messagesData);
+    }
+  }, [messagesData]);
 
+  useEffect(() => {
+    if (userdata && userdata._id) {
+      socket = io(ENDPOINTS);
+      socket.emit("setup", userdata._id);
+      socket.on("connected", () => setSocketconnected(true));
+    }
+  }, [userdata]);
+  // Handle sending a new message
+  const handleSendMessage = async () => {
+    if (!currentMessage.trim() || !userdata?._id || !chatId) return;
+  
     try {
+      const newMessage = {
+        content: currentMessage,
+        sender: userdata._id,
+        createdAt: new Date().toISOString(),
+      };
+  
+      // Optimistic UI update
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      setSentMessages((prevSentMessages) => [
+        ...prevSentMessages,
+        newMessage.content, 
+      ]);
+  
       const response = await sendmessages({
         chatid: chatId,
         content: currentMessage,
       }).unwrap();
-
-      console.log("Message sent:", response);
-
+      console.log(response)
       if (response) {
-        setMessages((prevMessages) => [...prevMessages, response]);
-        socketio.emit("chat", response); // Emit new message for real-time
-        setCurrentMessage(""); // Clear input
+        console.log("9999999999999999999999999999")
+        // Ensure the room is joined using the correct chatId
+        socket.emit("new message", response.data);
+        setCurrentMessage(""); // Clear input after message sent
       }
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
     }
   };
+  
 
-  const isSender = (message: any) => message.sender === userdata?._id;
+  // Helper function to check if the message is sent by the current user
+  const isSender = (message: any) => {
+    // console.log(message, "dei ith thaan daa message ");
+    
+    return message.sender[0] === userdata?._id; // Check by user ID
+  };
 
   return (
     <div className="fixed bottom-20 right-4 w-80 h-96 bg-white rounded-lg shadow-xl flex flex-col z-50">
@@ -110,6 +157,10 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId = "" }) => {
       </div>
 
       <div className="flex-1 p-4 overflow-auto">
+        <p className="text-sm">
+          Welcome {userdata?.username ? userdata.username : "Guest"}! How can we
+          help you today?
+        </p>
         {messagesLoading && <p>Loading messages...</p>}
         {messagesError && <p>Error loading messages</p>}
 
@@ -124,25 +175,19 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId = "" }) => {
               >
                 <div
                   className={`inline-block px-3 py-2 rounded-lg ${
-                    isSender(msg) ? "bg-blue-500 text-white" : "bg-gray-200"
+                    isSender(msg)
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-black"
                   }`}
                 >
                   <p>{msg.content}</p>
                 </div>
-                <small className="block text-gray-500 text-xs">
-                  {new Date(msg.createdAt).toLocaleString()}
-                </small>
               </div>
             ))}
           </div>
         ) : (
           <p>No messages yet</p>
         )}
-
-        <p className="text-sm">
-          Welcome {userdata?.username ? userdata.username : "Guest"}! How can we
-          help you today?
-        </p>
       </div>
 
       <div className="p-4 border-t">
@@ -197,12 +242,12 @@ const ProfilePage = () => {
   const [deletebook] = useDeletebookMutation();
   const [userchat] = useUserchatMutation();
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const userInfo = localStorage.getItem("userInfo") 
-  ? JSON.parse(localStorage.getItem("userInfo") || "{}")
-  : null; 
-   const dispatch = useDispatch();
-   const userId = userInfo.user._id ;
-     const [chats, setChats] = useState<string>("");
+  const userInfo = localStorage.getItem("userInfo")
+    ? JSON.parse(localStorage.getItem("userInfo") || "{}")
+    : null;
+  const dispatch = useDispatch();
+  const userId = userInfo.user._id;
+  const [chats, setChats] = useState<string>("");
   const [chatId, setChatId] = useState<string | null>(null);
 
   const {
@@ -333,7 +378,7 @@ const ProfilePage = () => {
               <p className="text-gray-600 mb-4">No books found</p>
             )}
             <button
-              className="mt-6 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+              className="mt-6px-4  bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition duration-300"
               onClick={() => setIsModalOpen(true)}
             >
               ADD BOOK
@@ -354,26 +399,27 @@ const ProfilePage = () => {
       case "LOG-OUT":
         return <h2 className="text-2xl font-bold">Logging Out...</h2>;
       default:
-        return null;    
+        return null;
     }
   };
 
   const handleChat = async () => {
     try {
       const userInfo = localStorage.getItem("userInfo");
-      console.log(userInfo,"the user data while chat initializing ,");
-      
+      console.log(userInfo, "the user data while chat initializing ,");
+
       if (userInfo) {
         const parsedUserInfo = JSON.parse(userInfo);
-        console.log(parsedUserInfo,"the userinfo while in the parseduserinfo stage ");
-        
-          const userId = parsedUserInfo.user._id;
-          console.log("userId in profile", userId);
-if (userId) {
-  
+        console.log(
+          parsedUserInfo,
+          "the userinfo while in the parseduserinfo stage "
+        );
 
+        const userId = parsedUserInfo.user._id;
+        console.log("userId in profile", userId);
+        if (userId) {
           const res = await userchat(userId).unwrap();
-          console.log("Chat initiated:", res); 
+          console.log("Chat initiated:", res);
 
           if (res.success === true) {
             // Access the chatId directly from res.data.chatId

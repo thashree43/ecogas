@@ -1,3 +1,4 @@
+import {Types} from "mongoose"
 // {Agent datas
 export interface Agent {
   _id: string;
@@ -139,3 +140,50 @@ export interface SuccessMessageProps {
   setShowSuccessMessage: React.Dispatch<React.SetStateAction<boolean>>;
 }
 // successprops}
+
+//messages
+export interface Message {
+  _id: string;
+  content: string;
+  sender: string;
+  chat?: { _id: string }[];
+  createdAt: Date;
+}
+
+export interface Chat {
+  _id: string;
+  chatname: string;
+  user: { username: string }[];
+  admin:{ _id:string,username: string }[]
+  latestmessage?: { content: string }[]; // Marking latestmessage as optional
+  updatedAt?: string; // Marking updatedAt as optional
+}
+
+// Loginresponce 
+export interface LoginResponse {
+  success: boolean;
+  token: string;
+  refreshToken: string;
+  admin?: {
+    _id: string;
+    email: string;
+  };
+}
+export interface IAdminData {
+  _id: string;
+  username: string;
+  email: string;
+  mobile: number | null;
+  password: string;
+  is_blocked: boolean;
+  is_admin: boolean;
+  is_verified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface loginResponse {
+  success: boolean;
+  admin: IAdminData;
+  token: string;
+}
