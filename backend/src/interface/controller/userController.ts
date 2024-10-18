@@ -154,14 +154,14 @@ export class userController {
 
         // Set cookies for access and refresh tokens
         res.cookie("userToken", token, {
-          maxAge: 1 * 24 * 60 * 60 * 1000, // 1 hour
+          maxAge: 1 * 24 * 60 * 60 * 1000, 
           httpOnly: true,
           sameSite: "strict",
-          secure: process.env.NODE_ENV === "production", // Secure flag only in production
+          secure: process.env.NODE_ENV === "production", 
         });
 
         res.cookie("userrefreshToken", refreshtoken, {
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          maxAge: 7 * 24 * 60 * 60 * 1000, 
           httpOnly: true,
           sameSite: "strict",
           secure: process.env.NODE_ENV === "production",
@@ -259,7 +259,7 @@ export class userController {
         });
 
         res.cookie("userToken", token, {
-          maxAge: 60 * 60 * 1000,
+          maxAge: 1 * 24 * 60 * 60 * 1000,
           httpOnly: true,
           sameSite: "strict",
           secure: process.env.NODE_ENV === "production",

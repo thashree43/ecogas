@@ -13,7 +13,7 @@ const ENDPOINTS = "http://localhost:3000";
 let socket:Socket<DefaultEventsMap, DefaultEventsMap> ;
 
 const CustomerExperience: React.FC<ChatPageProps> = ({ }) => {
-  const { data: chats, isLoading, isError } = useGetcustomersQuery();
+  const { data: chats, isLoading, isError,refetch: refetchChats } = useGetcustomersQuery();
   const [selectedChatId, setSelectedChatId] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [socketconnected,setSocketconnected] = useState(false)
@@ -25,38 +25,43 @@ const CustomerExperience: React.FC<ChatPageProps> = ({ }) => {
   const { data: chatMessages, refetch: refetchMessages } = useGetMessagesQuery(selectedChatId?._id ?? "", {
     skip: !selectedChatId,
   });
-  console.log(selectedChatId?.admin[0],"the admin id for socket ");
   
-   useEffect(() => {
+  useEffect(() => {
     if (!socket) {
-      socket = io(ENDPOINTS); // Your endpoint
+      socket = io(ENDPOINTS);
     }
-
-    if (selectedChatId && selectedChatId?.admin[0]) {
-      socket.emit("setup", selectedChatId?.admin[0]); // Setting up socket with user ID
-      socket.on("connected", () => setSocketconnected(true));
+  
+    if (selectedChatId && selectedChatId.admin[0]) {
+      socket.emit("setup", selectedChatId.admin[0]);
     }
-    socket.on("message recieved",(newMessageReceived:Message)=>{
-      console.log("000000000000000000000000",selectedChatId?._id)
-      console.log("999999999999999999999",newMessageReceived.chat)
+  
+    socket.off("message recieved"); 
+  
+    socket.on("message recieved", (newMessageReceived: Message) => {
+      console.log("Incoming message:", newMessageReceived);
+  
       if (selectedChatId?._id === newMessageReceived.chat?.[0]) {
-      console.log("555555555555555555555555")
-
-        setMessages((prevMessages) => [...prevMessages, newMessageReceived]); 
+        setMessages((prevMessages) => [...prevMessages, newMessageReceived]);
       }
-    })
-
+    });
+  
+    socket.on("connected", () => {
+      setSocketconnected(true);
+      console.log("Socket connected in the custom expo in the admin");
+    });
+  
     return () => {
-      socket.disconnect(); // Cleanup on component unmount
+      socket.off("message recieved");
+      socket.off("connected");
     };
   }, [selectedChatId]);
-  console.log(selectedChatId?._id,"the rooom id for cht ");
+  
   
   useEffect(() => {
     if (selectedChatId) {
       socket.emit("join chat", { _id: selectedChatId?._id });
     }
-  }, [selectedChatId]);
+  }, [selectedChatId,socketconnected]);
 
   useEffect(() => {
     if (chatMessages) {
@@ -69,14 +74,13 @@ const CustomerExperience: React.FC<ChatPageProps> = ({ }) => {
   };
 
   const handleCustomerClick = (chat: Chat) => {
-    setSelectedChatId(chat);
-    refetchMessages();
+    setSelectedChatId(chat); // Set selected chat to trigger refetch
+    if (socket && chat.admin[0]) {
+      socket.emit("setup", chat.admin[0]);
+    }
   };
 
-  const handleCloseChat = () => {
-    setSelectedChatId(null);
-    setMessages([]);
-  };
+ 
 
   const handleSendMessage = async () => {
     if (newMessage.trim() && selectedChatId) {
@@ -91,24 +95,28 @@ const CustomerExperience: React.FC<ChatPageProps> = ({ }) => {
           }).unwrap();
           console.log('Message sent successfully:', result);
           socket.emit("new message", result);
+          console.log(socket.emit("new message", result),"the message has been sent to the backend");
+          
 
           setNewMessage("");
           refetchMessages();
         } catch (error) {
           console.error("Error sending message:", error);
-          // Add user-friendly error handling here
         }
       } else {
         console.error('Admin token not found');
-        // Add user-friendly error handling here
       }
     }
   };
-
+  const handleCloseChat = () => {
+    setSelectedChatId(null);  // Clear the selected chat
+    setMessages([]);          // Clear the messages for the closed chat
+    refetchChats();           // Refetch the chat list to update any changes
+  };
   const isSender = (message: any) => {
     
-    // console.log(message, "dei ith thaan daa message ");
-    // console.log(selectedChatId?.admin[0],"admin di while message");
+    console.log(message, "dei ith thaan daa message ");
+    console.log(selectedChatId?.admin[0],"admin di while message");
     
     return message.sender[0]._id  === selectedChatId?.admin[0]; 
   };

@@ -201,4 +201,20 @@ export class AgentRepository implements IAgentRepository {
       return null;
     }
   }
+  async agentgetsales(agentId: string | Types.ObjectId): Promise<IagentData | null> {
+    try {
+      const datas = await agentModel
+        .findOne({ _id: agentId })
+        .populate({
+          path: "orders",
+          model: "Orders"
+        })
+        .exec();
+      
+      return datas;
+    } catch (error) {
+      console.error("Error in agentgetsales:", error);
+      return null;
+    }
+  }
 }

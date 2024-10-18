@@ -7,6 +7,7 @@ import UserList from '../Userlisting';
 import AgentList from '../Agentlisting';
 import OrdersPage from '../Orderlisting';
 import CustomerExperience from '../CustomExp';
+import SalesListing from '../Saleslisting';
 
 const Dashboard: React.FC = () => {
   return (
@@ -18,7 +19,10 @@ const Dashboard: React.FC = () => {
           <Route path="users" element={<UserList />} />
           <Route path='agents' element={<AgentList/>} />
           <Route path='orders' element ={<OrdersPage/>}/>
-          <Route path='customexp' element={<CustomerExperience/>}/>
+          <Route path='customexp' element={<CustomerExperience onClose={function (): void {
+            throw new Error('Function not implemented.');
+          } }/>}/>
+          <Route path='sales' element={<SalesListing/>}/>
         </Routes>
       </div>
     </div>

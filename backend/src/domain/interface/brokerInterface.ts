@@ -13,4 +13,4 @@ export interface IAgentRepository {
   deleteproduct(id: string | Types.ObjectId): Promise<IProductDocument | null>;
   getordersin(agentId: Types.ObjectId | string): Promise<IagentData | null>;
   updatestatus(id:Types.ObjectId | string):Promise<IOrderData | null>
-}
+  agentgetsales(agentId: string | Types.ObjectId): Promise<IagentData | null>}

@@ -11,6 +11,8 @@ import {
   getcustomerusecase,
   GetMessagesUseCase,
   SendMessageUseCase,
+  saleslitingusecase,
+
 } from "../../usecase";
 import { adminauth } from "../middleware/adminauth";
 
@@ -31,6 +33,7 @@ const AdminGetallOrderUseCaseInstance = new admingetallorderusecasse(
 const GetCustomerUseCaseInstance = new getcustomerusecase(AdminRepositoryInstance)
 const GetMessageUseCaseInstance = new GetMessagesUseCase(AdminRepositoryInstance)
 const SendMessageUseCaseInstance = new SendMessageUseCase(AdminRepositoryInstance)
+const SaleslistingUseCaseInstance = new saleslitingusecase(AdminRepositoryInstance)
 const AdminControllerInstance = new AdminController(
   AdminLoginUseCaseInstance,
   GetUserUseCaseInstance,
@@ -40,7 +43,8 @@ const AdminControllerInstance = new AdminController(
   AdminGetallOrderUseCaseInstance,
   GetCustomerUseCaseInstance,
   GetMessageUseCaseInstance,
-  SendMessageUseCaseInstance
+  SendMessageUseCaseInstance,
+  SaleslistingUseCaseInstance
 );
 
 let router = Router();
@@ -83,4 +87,7 @@ router.get('/getmessages/:chatId', (req, res, next) =>
 router.post('/sendmessage', (req, res, next) =>
   AdminControllerInstance.sendMessage(req, res, next)
 );
+router.get('/saleslists',(req,res,next)=>
+AdminControllerInstance.saleslisting(req,res,next)
+)
 export { router as adminroute };

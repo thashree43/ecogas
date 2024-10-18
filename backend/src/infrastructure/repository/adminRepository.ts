@@ -117,4 +117,15 @@ export class AdminRepository implements IadminRepository {
         { new: true } 
     );
   }
+  async getsales(): Promise<IagentData[] | null> {
+      try {
+        const datas = await agentModel.find().populate("orders");
+        return datas
+
+      } catch (error) {
+        console.error(error,"the error while sales listing");
+        throw new Error("errors ooccured in ")
+        
+      }
+  }
 }

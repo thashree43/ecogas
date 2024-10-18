@@ -21,6 +21,7 @@ const Sidebar: React.FC = () => {
     { id: "users", icon: FaUsers, label: "Users", path: "/agent/dashboard/users" },
     { id: "company", icon: FaBuilding, label: "Company", path: "/agent/dashboard/company",},
     { id: "orders", icon: RiShoppingBasketFill, label: "Orders", path: "/agent/dashboard/orders",},
+    { id: "sales", icon: RiShoppingBasketFill, label: "Sales", path: "/agent/dashboard/sales" }, // New Sales option
 
   ];
 

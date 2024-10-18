@@ -15,5 +15,5 @@ export interface IadminRepository {
     sendMessage(chatId: string, adminId: string, content: string): Promise<IMessageData>;
     updateLatestMessage(chatId: Types.ObjectId | string, messageId: Types.ObjectId | string): Promise<void>;
     saveMessage(messagedata: any): Promise<IMessageData>;
-
+    getsales():Promise<IagentData[] | null>;
 }

@@ -61,21 +61,16 @@ const baseQuery = fetchBaseQuery({
   baseUrl: baseurluser,
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
-    console.log("prepareHeaders function called");
     
     const token = localStorage.getItem("userToken");
-    console.log("Token from localStorage:", token);
 
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
-      console.log("Authorization header set:", headers.get('Authorization'));
     } else {
       console.log("No token found in localStorage");
     }
 
-    console.log("All headers:");
     headers.forEach((value, key) => {
-      console.log(`${key}: ${value}`);
     });
 
     return headers;
@@ -100,7 +95,6 @@ const baseQueryWithReauth: BaseQueryFn<
     if (refreshResult.data) {
       const newToken = (refreshResult.data as RefreshTokenResponse).token;
 
-      console.log(newToken,"the newtoken  in the uuser side ");
       
       localStorage.setItem("userToken", newToken);
 
@@ -130,7 +124,6 @@ const baseQueryWithReauth: BaseQueryFn<
         'Authorization': `Bearer ${newToken}`
       };
 
-      console.log("New headers after refresh:", newHeaders);
 
       result = await baseQuery(
         {

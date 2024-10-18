@@ -1,13 +1,24 @@
 import {Types} from "mongoose"
 // {Agent datas
+
+export interface CompanyData {
+  _id?: string;
+  companyname: string;
+  weight: number;
+  price: number;
+  quantity: number;
+}
 export interface Agent {
   _id: string;
   agentname: string;
   email: string;
-  pincode: number;
   mobile: number;
+  password: string;
+  pincode: number;
   is_Approved: boolean;
-  imageUrl: string;
+  image: string;
+  products: CompanyData[];
+  orders: Order[];
 }
 
 export interface AgentLoginResponse {
@@ -49,6 +60,7 @@ export interface FormErrors {
 
 // {Orderdata
 export interface Order {
+  createdAt: string | number | Date;
   _id: string;
   name: string;
   address: string;
@@ -68,13 +80,7 @@ export interface OrderResponse {
 // Order}
 
 // {Company 
-export interface CompanyData {
-  _id?: string;
-  companyname: string;
-  weight: number;
-  price: number;
-  quantity: number;
-}
+
 
 // Company}
 
@@ -187,3 +193,16 @@ export interface loginResponse {
   admin: IAdminData;
   token: string;
 }
+// Sale interface representing the sales data
+export interface Sale {
+  _id: string;
+  amount: number;
+  productName: string;
+  date: string;
+  agent: {
+    name: string;
+  };
+}
+
+
+

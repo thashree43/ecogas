@@ -8,10 +8,12 @@ import {
   DeleteProductUseCase,
   getordersfromagentusecase,
   updateorderstatususecase,
+  agentsaleslistusecase,
 } from "../../usecase";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Types } from "mongoose";
 import { generateRefreshToken, generatetoken } from "../middleware/authtoken";
+import { log } from "winston";
 
 export class agentController {
   private jwtSecret!: string;
@@ -24,7 +26,9 @@ export class agentController {
     private EditProductUseCase: EditProductUseCase,
     private DeleteproductUseCase: DeleteProductUseCase,
     private GetordersfromAgent: getordersfromagentusecase,
-    private UpdateOrderStatus: updateorderstatususecase
+    private UpdateOrderStatus: updateorderstatususecase,
+    private Agentsaleslistusecase:agentsaleslistusecase,
+
   ) {
     this.jwtSecret = process.env.JWT_ACCESS_SECRET || "default_jwt_secret";
   }
@@ -317,4 +321,33 @@ export class agentController {
         });
     }
   };
+  getsaleslists = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const agentId = req.params.agentid;
+      console.log("ID for listing sales:", agentId);
+
+      const data = await this.Agentsaleslistusecase.execute(agentId);
+      console.log("the get sales datas",data);
+      
+      if (!data) {
+        res.status(404).json({ success: false, message: "No sales data found" });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: data
+      });
+    } catch (error) {
+      console.error("Error while getting sales:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Internal server error" 
+      });
+    }
+  }
 }

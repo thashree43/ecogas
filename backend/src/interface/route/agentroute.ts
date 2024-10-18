@@ -9,6 +9,7 @@ import {
   DeleteProductUseCase,
   getordersfromagentusecase,
   updateorderstatususecase,
+  agentsaleslistusecase,
 } from "../../usecase";
 import { AgentRepository } from "../../infrastructure/repository";
 import multer from "multer";
@@ -79,6 +80,7 @@ const GetOrdersFromAgentUseCaseInstance = new getordersfromagentusecase(
 const UpdateOrderStatusUseCaseInstance = new updateorderstatususecase(
   AgentRepositoryInstance
 );
+const AgentSalesListUseCaseInstance = new agentsaleslistusecase(AgentRepositoryInstance)
 // conntroller
 const agentControllerInstance = new agentController(
   AgentApplyUsecaseInstance,
@@ -88,7 +90,8 @@ const agentControllerInstance = new agentController(
   EditProductUseCaseInstance,
   DeleteProductUseCaseInstance,
   GetOrdersFromAgentUseCaseInstance,
-  UpdateOrderStatusUseCaseInstance
+  UpdateOrderStatusUseCaseInstance,
+  AgentSalesListUseCaseInstance
 );
 
 const router = Router();
@@ -104,6 +107,7 @@ router.patch("/editproduct", agentauth, agentControllerInstance.editproduct);
 router.delete("/deleteproduct/:id", agentauth, agentControllerInstance.deleteProduct);
 router.get("/agentgetorders", agentauth, agentControllerInstance.getordersin);
 router.patch("/orderstatus/:orderid", agentauth, agentControllerInstance.statusupdate);
+router.get("/getsales/:agentid",agentauth,agentControllerInstance.getsaleslists )
 export { router as agentroute };
 
 // Error handling middleware (add this to your main app file)

@@ -1,5 +1,7 @@
 import { BaseQueryFn, createApi, FetchArgs, fetchBaseQuery, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
 import { baseurlagent } from '../api';
+import { Query } from 'mongoose';
+import { Agent } from '@/interfacetypes/type';
 
 interface Order {
   _id: string;
@@ -37,16 +39,17 @@ interface ProductListResponse {
   products: Product[];
 }
 const baseQuery = fetchBaseQuery({
-  baseUrl:baseurlagent,
-  credentials:'include',
-  prepareHeaders:(headers)=>{
-    const token = localStorage.getItem("agentToken")
+  baseUrl: baseurlagent,
+  credentials: 'include',
+  prepareHeaders: (headers) => {
+    const token = localStorage.getItem("agentToken");
     if (token) {
-      headers.set('AgentAutherization',`Bearer${token}`);
+      headers.set('AgentAuthorization', `Bearer ${token}`);
     }
-    return headers
+    return headers;
   }
-})
+});
+
 
 const baseQueryWithReauth:BaseQueryFn<
 string | FetchArgs,
@@ -185,7 +188,10 @@ export const agentApi = createApi({
         }
       },
     }),
-    
+    getsales: builder.query<Agent[], string>({
+      query: (agentId) => `/getsales/${agentId}`,
+    }),
+  
   }),
 });
 
@@ -199,4 +205,6 @@ export const {
   useDeleteproductMutation,
   useOrderlistingQuery,
   useMarkorderdeliverMutation,
+  useGetsalesQuery
+
 } = agentApi;

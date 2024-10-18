@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Sidebar from "../dashboard/Sidebarcomponent";
 import ProductList from '../Productlistingpage';
 import OrderList from '../Orderlistingagent';
+import Saleslists from "../Saleslist"
 
 const Dashboard: React.FC = () => {
   const agentName = localStorage.getItem("agentname") || "Agent";
@@ -19,6 +20,7 @@ const Dashboard: React.FC = () => {
             <Route index element={<DashboardHome />} />
             <Route path="/company" element={<ProductList />} />
             <Route path='/orders' element={<OrderList/>}/>
+            <Route path='/sales' element={<Saleslists/>}/>
           </Routes>
         </div>
       </div>

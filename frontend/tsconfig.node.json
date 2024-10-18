@@ -7,10 +7,13 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
+    // "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    
+    /* Enable composite for project references */
+    "composite": true, // Enable composite project
+    "declaration": true, // Generate declaration files
 
     /* Linting */
     "strict": true,

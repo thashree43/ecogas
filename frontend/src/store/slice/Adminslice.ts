@@ -1,6 +1,12 @@
-import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
-import { basseurladmin } from '../api';
-
+import {
+  createApi,
+  fetchBaseQuery,
+  BaseQueryFn,
+  FetchArgs,
+  FetchBaseQueryError,
+} from "@reduxjs/toolkit/query/react";
+import { basseurladmin } from "../api";
+import { Order, CompanyData } from "../../interfacetypes/type";
 interface AgentResponse {
   success: boolean;
   agents: {
@@ -48,42 +54,47 @@ interface RefreshTokenResponse {
   token: string;
 }
 interface Message {
-  _id: string; 
+  _id: string;
   content: string;
-  sender: string; 
-  createdAt: Date; 
+  sender: string;
+  createdAt: Date;
 }
 type Messages = Message[];
 interface chat {
   length: number;
   map: any;
-  _id:string ;
-  chatname:string;
-  user:User[]
-  admin:User[]
-  latestmessages:Message[]
-
+  _id: string;
+  chatname: string;
+  user: User[];
+  admin: User[];
+  latestmessages: Message[];
+}
+interface Agent {
+  _id: string;
+  agentname: string;
+  email: string;
+  mobile: number;
+  password: string;
+  pincode: number;
+  is_Approved: boolean;
+  image: string;
+  products: CompanyData[];
+  orders: Order[];
 }
 const baseQuery = fetchBaseQuery({
   baseUrl: basseurladmin,
-  credentials: 'include',
+  credentials: "include",
   prepareHeaders: (headers, { getState }) => {
-    console.log("prepareHeaders function called");
-    
     const token = localStorage.getItem("adminToken");
-    console.log("Token from localStorage:", token);
 
     if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
-      console.log("Authorization header set:", headers.get('Authorization'));
+      headers.set("Authorization", `Bearer ${token}`);
     } else {
       console.log("No token found in localStorage");
     }
 
     console.log("All headers:");
-    headers.forEach((value, key) => {
-      console.log(`${key}: ${value}`);
-    });
+    headers.forEach((value, key) => {});
 
     return headers;
   },
@@ -100,7 +111,7 @@ const baseQueryWithReauth: BaseQueryFn<
     console.log("Token expired, attempting to refresh...");
 
     const refreshResult = await baseQuery(
-      { url: '/refresh-token', method: 'POST' },
+      { url: "/refresh-token", method: "POST" },
       api,
       extraOptions
     );
@@ -110,10 +121,10 @@ const baseQueryWithReauth: BaseQueryFn<
 
       localStorage.setItem("adminToken", newToken);
 
-      const fetchArgs = typeof args === 'string' ? { url: args } : args;
+      const fetchArgs = typeof args === "string" ? { url: args } : args;
 
       let newHeaders: HeadersInit;
-      
+
       if (fetchArgs.headers instanceof Headers) {
         newHeaders = new Headers(fetchArgs.headers);
       } else if (Array.isArray(fetchArgs.headers)) {
@@ -121,7 +132,10 @@ const baseQueryWithReauth: BaseQueryFn<
           if (key && value) acc[key] = value;
           return acc;
         }, {} as Record<string, string>);
-      } else if (typeof fetchArgs.headers === 'object' && fetchArgs.headers !== null) {
+      } else if (
+        typeof fetchArgs.headers === "object" &&
+        fetchArgs.headers !== null
+      ) {
         newHeaders = fetchArgs.headers as Record<string, string>;
       } else {
         newHeaders = {};
@@ -133,7 +147,7 @@ const baseQueryWithReauth: BaseQueryFn<
 
       newHeaders = {
         ...newHeaders,
-        'Authorization': `Bearer ${newToken}`
+        Authorization: `Bearer ${newToken}`,
       };
 
       console.log("New headers after refresh:", newHeaders);
@@ -156,14 +170,18 @@ const baseQueryWithReauth: BaseQueryFn<
 };
 
 export const adminApi = createApi({
-  reducerPath: 'adminApi',
+  reducerPath: "adminApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Agent', 'Orders', 'User'],
+  tagTypes: ["Agent", "Orders", "User"],
   endpoints: (builder) => ({
-    adminlogin: builder.mutation<{
-      refreshToken(arg0: string, refreshToken: any): unknown;
-      success: any; token: string
-    }, { email: string; password: string }>({
+    adminlogin: builder.mutation<
+      {
+        refreshToken(arg0: string, refreshToken: any): unknown;
+        success: any;
+        token: string;
+      },
+      { email: string; password: string }
+    >({
       query: ({ email, password }) => ({
         url: "/adminlogin",
         method: "POST",
@@ -172,15 +190,18 @@ export const adminApi = createApi({
     }),
     logout: builder.mutation<void, void>({
       query: () => ({
-        url: '/adminlogout',
-        method: 'POST',
+        url: "/adminlogout",
+        method: "POST",
       }),
     }),
     getusers: builder.query<User[], void>({
       query: () => "/get_user",
-      providesTags: ['User'],
+      providesTags: ["User"],
     }),
-    updatestatus: builder.mutation<{ success: boolean }, { id: string; is_blocked: boolean }>({
+    updatestatus: builder.mutation<
+      { success: boolean },
+      { id: string; is_blocked: boolean }
+    >({
       query: ({ id, is_blocked }) => ({
         url: `/updatestatus/${id}`,
         method: "PATCH",
@@ -188,12 +209,16 @@ export const adminApi = createApi({
       }),
       async onQueryStarted({ id, is_blocked }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
-          adminApi.util.updateQueryData('getusers', undefined, (draft: User[]) => {
-            const user = draft.find((user: User) => user._id === id);
-            if (user) {
-              user.is_blocked = is_blocked;
+          adminApi.util.updateQueryData(
+            "getusers",
+            undefined,
+            (draft: User[]) => {
+              const user = draft.find((user: User) => user._id === id);
+              if (user) {
+                user.is_blocked = is_blocked;
+              }
             }
-          })
+          )
         );
         try {
           await queryFulfilled;
@@ -203,23 +228,30 @@ export const adminApi = createApi({
       },
     }),
     getallagent: builder.query<AgentResponse, void>({
-      query: () => '/get_agent',
-      providesTags: ['Agent'],
+      query: () => "/get_agent",
+      providesTags: ["Agent"],
     }),
-    updateapproval: builder.mutation<{ success: boolean }, { id: string; is_Approved: boolean }>({
+    updateapproval: builder.mutation<
+      { success: boolean },
+      { id: string; is_Approved: boolean }
+    >({
       query: ({ id, is_Approved }) => ({
         url: `/updateapproval/${id}`,
-        method: 'PATCH',
+        method: "PATCH",
         body: { is_Approved },
       }),
       async onQueryStarted({ id, is_Approved }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
-          adminApi.util.updateQueryData('getallagent', undefined, (draft: AgentResponse) => {
-            const agent = draft.agents.find(agent => agent._id === id);
-            if (agent) {
-              agent.is_Approved = is_Approved;
+          adminApi.util.updateQueryData(
+            "getallagent",
+            undefined,
+            (draft: AgentResponse) => {
+              const agent = draft.agents.find((agent) => agent._id === id);
+              if (agent) {
+                agent.is_Approved = is_Approved;
+              }
             }
-          })
+          )
         );
         try {
           await queryFulfilled;
@@ -229,31 +261,37 @@ export const adminApi = createApi({
       },
     }),
     getfullorders: builder.query<OrderResponse, void>({
-      query: () => '/admingetorders',
-      providesTags: ['Orders'],
+      query: () => "/admingetorders",
+      providesTags: ["Orders"],
     }),
     refreshToken: builder.mutation<RefreshTokenResponse, void>({
       query: () => ({
-        url: '/refresh-token',
-        method: 'POST',
+        url: "/refresh-token",
+        method: "POST",
       }),
     }),
     getcustomers: builder.query<chat[], void>({
-      query: () => '/getcustomer'
+      query: () => "/getcustomer",
     }),
     getMessages: builder.query<Message[], string>({
-      query: (chatId) => `/getmessages/${chatId}`
+      query: (chatId) => `/getmessages/${chatId}`,
     }),
-    sendMessage: builder.mutation<void, { chatId: string, content: string, adminToken: string }>({
+    sendMessage: builder.mutation<
+      void,
+      { chatId: string; content: string; adminToken: string }
+    >({
       query: ({ chatId, content, adminToken }) => ({
         url: `/sendmessage`,
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${adminToken}`
+          Authorization: `Bearer ${adminToken}`,
         },
-        body: { chatId, content }
-      })
-    })
+        body: { chatId, content },
+      }),
+    }),
+    saleslists: builder.query<Agent[], void>({
+      query: () => "/saleslists",
+    }),
   }),
 });
 
@@ -269,5 +307,5 @@ export const {
   useGetcustomersQuery,
   useGetMessagesQuery,
   useSendMessageMutation,
-  
+  useSaleslistsQuery,
 } = adminApi;

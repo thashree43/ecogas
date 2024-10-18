@@ -29,6 +29,7 @@ import socketIOClient, { Socket } from "socket.io-client";
 import { useDispatch } from "react-redux";
 import io from "socket.io-client";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
+import { Message } from "../../../interfacetypes/type";
 interface ChatPageProps {
   onClose: () => void;
   chatId?: string;
@@ -38,41 +39,62 @@ const ENDPOINTS = "http://localhost:3000";
 let socket: Socket<DefaultEventsMap, DefaultEventsMap>;
 
 const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
-  const [userdata, setUserdata] = useState<{
-    username?: string;
-    _id?: string;
-  } | null>(null);
+  const [userdata, setUserdata] = useState<{ username?: string; _id?: string } | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
-  const [sentMessages, setSentMessages] = useState<string[]>([]);
-  const [socketconnected,setSocketconnected] = useState(false)
+  const [socketconnected, setSocketconnected] = useState(false);
   const [sendmessages] = useSendmessageMutation();
   const {
     data: messagesData,
     isLoading: messagesLoading,
     isError: messagesError,
+    refetch: refetchMessages,
   } = useGetmessagesQuery(chatId || "");
 
-  // Fetch user data from localStorage
   useEffect(() => {
-    // Initialize socket connection if not already initialized
     if (!socket) {
-      socket = io(ENDPOINTS); // Your endpoint
+      socket = io(ENDPOINTS);
     }
 
     if (userdata && userdata._id) {
-      socket.emit("setup", userdata._id); // Setting up socket with user ID
-      socket.on("connected", () => setSocketconnected(true));
+      // Emit 'setup' event once
+      socket.emit("setup", userdata._id);
+
+      // Remove any previous 'message recieved' listener before setting a new one
+      socket.off("message recieved");
+
+      socket.on("message recieved", (newMessageReceived: Message) => {
+        if (chatId === newMessageReceived.chat?.[0]) {
+          // Check if the message is already present before adding it
+          setMessages((prevMessages) => {
+            const exists = prevMessages.some(
+              (msg) => msg._id === newMessageReceived._id
+            );
+            if (!exists) {
+              return [...prevMessages, newMessageReceived];
+            }
+            return prevMessages;
+          });
+        }
+      });
+
+      socket.off("connected");
+      socket.on("connected", () => {
+        setSocketconnected(true);
+        console.log("Socket connected.");
+      });
     }
 
     return () => {
-      socket.disconnect(); // Cleanup on component unmount
+      // Clean up when component unmounts or dependencies change
+      socket.off("message recieved");
+      socket.off("connected");
     };
-  }, [userdata]);
+  }, [chatId, userdata]);
 
-  // Join the chat room when the chatId is available
+  // Join the chat room when chatId changes
   useEffect(() => {
-    if (chatId) {
+    if (chatId && socket) {
       socket.emit("join chat", { _id: chatId });
     }
   }, [chatId]);
@@ -90,61 +112,52 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
     }
   }, []);
 
-  // Fetch messages from server and listen for new socket messages
+  // Fetch messages from server when messagesData changes
   useEffect(() => {
     if (messagesData) {
       setMessages(messagesData);
     }
   }, [messagesData]);
-
+  // to get refresh while opeing the chat 
   useEffect(() => {
-    if (userdata && userdata._id) {
-      socket = io(ENDPOINTS);
-      socket.emit("setup", userdata._id);
-      socket.on("connected", () => setSocketconnected(true));
+    // Fetch messages when the chat is opened
+    if (chatId) {
+      refetchMessages();
     }
-  }, [userdata]);
+  }, [chatId, refetchMessages]);
+
   // Handle sending a new message
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || !userdata?._id || !chatId) return;
-  
+
     try {
       const newMessage = {
         content: currentMessage,
-        sender: userdata._id,
+        sender: [userdata._id],
         createdAt: new Date().toISOString(),
       };
-  
+
       // Optimistic UI update
       setMessages((prevMessages) => [...prevMessages, newMessage]);
-      setSentMessages((prevSentMessages) => [
-        ...prevSentMessages,
-        newMessage.content, 
-      ]);
-  
+
       const response = await sendmessages({
         chatid: chatId,
         content: currentMessage,
       }).unwrap();
-      console.log(response)
+      
       if (response) {
-        console.log("9999999999999999999999999999")
-        // Ensure the room is joined using the correct chatId
+        // Emit new message through socket
         socket.emit("new message", response.data);
-        setCurrentMessage(""); // Clear input after message sent
+        setCurrentMessage("");
+        refetchMessages() // Clear input after message sent
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message");
     }
   };
-  
 
-  // Helper function to check if the message is sent by the current user
   const isSender = (message: any) => {
-    // console.log(message, "dei ith thaan daa message ");
-    
-    return message.sender[0] === userdata?._id; // Check by user ID
+    return message?.sender?.[0] === userdata?._id;
   };
 
   return (
@@ -158,32 +171,29 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
 
       <div className="flex-1 p-4 overflow-auto">
         <p className="text-sm">
-          Welcome {userdata?.username ? userdata.username : "Guest"}! How can we
-          help you today?
+          Welcome {userdata?.username ? userdata.username : "Guest"}! How can we help you today?
         </p>
         {messagesLoading && <p>Loading messages...</p>}
         {messagesError && <p>Error loading messages</p>}
 
         {messages.length > 0 ? (
           <div>
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`message ${
-                  isSender(msg) ? "text-right" : "text-left"
-                } mb-2`}
-              >
+            {messages.map((msg, index) =>
+              msg && msg.content ? (
                 <div
-                  className={`inline-block px-3 py-2 rounded-lg ${
-                    isSender(msg)
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-black"
-                  }`}
+                  key={index}
+                  className={`message ${isSender(msg) ? "text-right" : "text-left"} mb-2`}
                 >
-                  <p>{msg.content}</p>
+                  <div
+                    className={`inline-block px-3 py-2 rounded-lg ${
+                      isSender(msg) ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+                    }`}
+                  >
+                    <p>{msg.content}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ) : null
+            )}
           </div>
         ) : (
           <p>No messages yet</p>
@@ -426,7 +436,6 @@ const ProfilePage = () => {
             setChatId(res.data.chatId);
             setChats(res.data.messages); // Assuming the messages are in res.data.messages
             setIsChatOpen(true);
-            toast.success("Chat initialized successfully");
           } else {
             console.error("Chat ID not found in response");
             toast.error("Chat initialization failed.");

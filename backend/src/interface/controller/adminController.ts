@@ -11,6 +11,7 @@ import {
   getcustomerusecase,
   GetMessagesUseCase,
   SendMessageUseCase,
+  saleslitingusecase,
 
 } from "../../usecase";
 import nodemailer from "nodemailer";
@@ -28,7 +29,9 @@ export class AdminController {
     private AdminGetallOrdersInstance: admingetallorderusecasse,
     private GetCustomeUseCaseInstance:getcustomerusecase,
     private GetMessagesUseCaseInstance:GetMessagesUseCase,
-    private SendMessageUseCaseInstance:SendMessageUseCase
+    private SendMessageUseCaseInstance:SendMessageUseCase,
+    private SaleslistingUseCaseInstance:saleslitingusecase,
+
   ) {
     const secret = process.env.JWT_ACCESS_SECRET;
     const refreshSecret = process.env.JWT_REFRESH_SECRET;
@@ -352,6 +355,17 @@ export class AdminController {
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Error sending message" });
+    }
+  }
+  async saleslisting(req: Request, res: Response, next: NextFunction) {
+    try {
+      
+      const salesdatas = await this.SaleslistingUseCaseInstance.execute()
+      res.json(salesdatas)
+    } catch (error) {
+      console.error(error,"error occured while getting sales lists");
+      throw new Error("error may occured")
+      
     }
   }
 }
