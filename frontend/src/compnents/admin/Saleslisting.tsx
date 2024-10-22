@@ -4,7 +4,7 @@ import { useSaleslistsQuery } from "../../store/slice/Adminslice";
 import { Agent, Order } from "../../interfacetypes/type";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable'; // Import the autoTable plugin
+import 'jspdf-autotable'; 
 import { UserOptions } from 'jspdf-autotable';
 
 declare module 'jspdf' {

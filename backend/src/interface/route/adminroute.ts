@@ -87,7 +87,7 @@ router.get('/getmessages/:chatId', (req, res, next) =>
 router.post('/sendmessage', (req, res, next) =>
   AdminControllerInstance.sendMessage(req, res, next)
 );
-router.get('/saleslists',(req,res,next)=>
+router.get('/saleslists',adminauth,(req,res,next)=>
 AdminControllerInstance.saleslisting(req,res,next)
 )
 export { router as adminroute };

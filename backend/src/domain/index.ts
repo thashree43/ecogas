@@ -1,7 +1,7 @@
 // entities  
 export * from "./entities/userentities"
 export * from "./entities/brokerentities"
-export * from "./entities/agentProduct"
+export * from "./entities/agentProductentities"
 export * from "./entities/bookentities"
 export * from  "./entities/orderentities"
 export * from "./entities/chatentities"

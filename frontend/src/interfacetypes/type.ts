@@ -1,3 +1,4 @@
+import { LucideIcon } from "lucide-react";
 import {Types} from "mongoose"
 // {Agent datas
 
@@ -60,7 +61,7 @@ export interface FormErrors {
 
 // {Orderdata
 export interface Order {
-  createdAt: string | number | Date;
+  createdAt?: string | number | Date;
   _id: string;
   name: string;
   address: string;
@@ -77,12 +78,29 @@ export interface OrderResponse {
   success: boolean;
   orders: Order[];
 }
-// Order}
 
-// {Company 
+export interface Books{
+  _id: string;
+  name: string;
+  consumerid: number;
+  mobile: number;
+  address: string;
+  company: string;
+}
 
-
-// Company}
+export interface GasBookListProps {
+  books: Books[];
+  isLoading: boolean;
+  isError: boolean;
+  handleDelete: (id: string) => void;
+  setIsModalOpen: (open: boolean) => void;
+}
+export interface MenuItemProps {
+  Icon: LucideIcon;
+  label: string;
+  active?: boolean;
+  onClick: () => void;
+}
 
 // Define the function props interface properly
 export interface FunctionData {

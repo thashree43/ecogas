@@ -39,7 +39,10 @@ const ENDPOINTS = "http://localhost:3000";
 let socket: Socket<DefaultEventsMap, DefaultEventsMap>;
 
 const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
-  const [userdata, setUserdata] = useState<{ username?: string; _id?: string } | null>(null);
+  const [userdata, setUserdata] = useState<{
+    username?: string;
+    _id?: string;
+  } | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [socketconnected, setSocketconnected] = useState(false);
@@ -57,15 +60,12 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
     }
 
     if (userdata && userdata._id) {
-      // Emit 'setup' event once
       socket.emit("setup", userdata._id);
 
-      // Remove any previous 'message recieved' listener before setting a new one
       socket.off("message recieved");
 
       socket.on("message recieved", (newMessageReceived: Message) => {
         if (chatId === newMessageReceived.chat?.[0]) {
-          // Check if the message is already present before adding it
           setMessages((prevMessages) => {
             const exists = prevMessages.some(
               (msg) => msg._id === newMessageReceived._id
@@ -86,20 +86,17 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
     }
 
     return () => {
-      // Clean up when component unmounts or dependencies change
       socket.off("message recieved");
       socket.off("connected");
     };
   }, [chatId, userdata]);
 
-  // Join the chat room when chatId changes
   useEffect(() => {
     if (chatId && socket) {
       socket.emit("join chat", { _id: chatId });
     }
   }, [chatId]);
 
-  // Load user data from localStorage
   useEffect(() => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (storedUserInfo) {
@@ -112,21 +109,17 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
     }
   }, []);
 
-  // Fetch messages from server when messagesData changes
   useEffect(() => {
     if (messagesData) {
       setMessages(messagesData);
     }
   }, [messagesData]);
-  // to get refresh while opeing the chat 
   useEffect(() => {
-    // Fetch messages when the chat is opened
     if (chatId) {
       refetchMessages();
     }
   }, [chatId, refetchMessages]);
 
-  // Handle sending a new message
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || !userdata?._id || !chatId) return;
 
@@ -137,19 +130,17 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
         createdAt: new Date().toISOString(),
       };
 
-      // Optimistic UI update
       setMessages((prevMessages) => [...prevMessages, newMessage]);
 
       const response = await sendmessages({
         chatid: chatId,
         content: currentMessage,
       }).unwrap();
-      
+
       if (response) {
-        // Emit new message through socket
         socket.emit("new message", response.data);
         setCurrentMessage("");
-        refetchMessages() // Clear input after message sent
+        refetchMessages();
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -171,7 +162,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
 
       <div className="flex-1 p-4 overflow-auto">
         <p className="text-sm">
-          Welcome {userdata?.username ? userdata.username : "Guest"}! How can we help you today?
+          Welcome {userdata?.username ? userdata.username : "Guest"}! How can we
+          help you today?
         </p>
         {messagesLoading && <p>Loading messages...</p>}
         {messagesError && <p>Error loading messages</p>}
@@ -182,11 +174,15 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
               msg && msg.content ? (
                 <div
                   key={index}
-                  className={`message ${isSender(msg) ? "text-right" : "text-left"} mb-2`}
+                  className={`message ${
+                    isSender(msg) ? "text-right" : "text-left"
+                  } mb-2`}
                 >
                   <div
                     className={`inline-block px-3 py-2 rounded-lg ${
-                      isSender(msg) ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+                      isSender(msg)
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200 text-black"
                     }`}
                   >
                     <p>{msg.content}</p>
@@ -221,7 +217,6 @@ const ChatPage: React.FC<ChatPageProps> = ({ onClose, chatId }) => {
   );
 };
 
-// LPG Animation component
 const LPGAnimation = () => (
   <svg className="w-full h-full" viewBox="0 0 100 100">
     <circle
@@ -244,7 +239,6 @@ const LPGAnimation = () => (
   </svg>
 );
 
-// Main ProfilePage component
 const ProfilePage = () => {
   const [activeSection, setActiveSection] = useState("MY BOOK");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -432,9 +426,8 @@ const ProfilePage = () => {
           console.log("Chat initiated:", res);
 
           if (res.success === true) {
-            // Access the chatId directly from res.data.chatId
             setChatId(res.data.chatId);
-            setChats(res.data.messages); // Assuming the messages are in res.data.messages
+            setChats(res.data.messages);
             setIsChatOpen(true);
           } else {
             console.error("Chat ID not found in response");
@@ -467,9 +460,7 @@ const ProfilePage = () => {
           </Link>
           <div className="w-32 h-32 mx-auto bg-gray-300 rounded-full mb-4 relative overflow-hidden">
             <LPGAnimation />
-            <div className="absolute bottom-0 right-0 bg-white rounded-full p-2">
-              {/* You can add an edit icon or other controls here */}
-            </div>
+            <div className="absolute bottom-0 right-0 bg-white rounded-full p-2"></div>
           </div>
         </div>
         <nav>
@@ -490,10 +481,8 @@ const ProfilePage = () => {
         </nav>
       </div>
 
-      {/* Main content */}
       <div className="flex-1 p-10 overflow-auto">{renderContent()}</div>
 
-      {/* Customer Experience Icon */}
       <button
         onClick={handleChat}
         className="fixed bottom-4 right-4 bg-blue-500 text-white p-3 rounded-full shadow-lg hover:bg-blue-600 transition duration-300"
@@ -501,7 +490,6 @@ const ProfilePage = () => {
         <MessageCircle size={24} />
       </button>
 
-      {/* Chat Page */}
       {/* Chat Page */}
       {isChatOpen && chatId && (
         <ChatPage onClose={() => setIsChatOpen(false)} chatId={chatId} />

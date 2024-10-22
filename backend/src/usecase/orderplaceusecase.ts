@@ -41,7 +41,7 @@ export class orderplaceusecase {
       company: selectedGas.companyname,
       price: selectedGas.price,
       paymentmethod: paymentMethod,
-      expectedat: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+      expectedat: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), 
       status: statuschange,
     };
 

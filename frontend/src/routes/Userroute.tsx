@@ -8,6 +8,7 @@ import UserProductroute from "../routes/protectroute/UserProductRoute";
 import UserVerifyroute from "./protectroute/UserVerifyroute";
 import GasBookingPage from "../compnents/user/mainpages/Bookingpage";
 import ProfilePage from "../compnents/user/profile/Profilepage";
+import BookingProfilePage from "../compnents/user/profile/SampleProfile";
 
 const UserRoute: React.FC = () => {
   return (
@@ -63,7 +64,7 @@ const UserRoute: React.FC = () => {
         }
       />
      <Route path="/profile" element = {<ProfilePage/>}/>
-     
+     <Route path="/pro" element={<BookingProfilePage/>}/>
 
     </Routes>
   );
