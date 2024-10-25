@@ -209,7 +209,12 @@ export const userApislice = createApi({
         body: postdata,
       }),
     }),
-    
+    logout:builder.mutation<void,void>({
+      query:()=>({
+        url:"/logout",
+        method:"POST",
+      })
+    }),
      getProviders: builder.query<GasProvider[], string>({
       query: (pincode) => `/gas-providers/${pincode}`,
       providesTags: ['GasProviders'],
@@ -260,13 +265,16 @@ export const userApislice = createApi({
         method: "POST"
       })
     }),
-    sendmessage:builder.mutation({
-      query:({chatid,content})=>({
-        url:"/sendmessages",
-        method:"POST",
-        body:{chatid,content}
-      })
+    sendmessage: builder.mutation({
+      query: (formData) => ({
+          url: "/sendmessages",
+          method: "POST",
+          body: formData,
+          formData: true
+        }),
+      
     }),
+    
     getmessages:builder.query<Messages, string>({
       query:(chatId)=>`/getmessage/${chatId}`
     })
@@ -283,6 +291,7 @@ export const {
   useForgotPasswordMutation,
   useResetpasswordMutation,
   useResendOtpMutation,
+  useLogoutMutation,
   useGetProvidersQuery,
   useAddbookMutation,
   useGetbookQuery,

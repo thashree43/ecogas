@@ -88,13 +88,32 @@ export class AdminRepository implements IadminRepository {
       throw new Error("Error fetching messages");
     }
   }
+  async saveMessage(messagedata: any): Promise<IMessageData> {
+    try {
+      // Ensure the data is in the correct format before saving
+      const formattedData = {
+        reciever: Array.isArray(messagedata.reciever) ? messagedata.reciever : [messagedata.reciever],
+        sender: Array.isArray(messagedata.sender) ? messagedata.sender : [messagedata.sender],
+        content: messagedata.content,
+        chat: Array.isArray(messagedata.chat) ? messagedata.chat : [messagedata.chat],
+        image: messagedata.image
+      };
+
+      const newMessage = new messageModel(formattedData);
+      return await newMessage.save();
+    } catch (error) {
+      console.error('Error saving message:', error);
+      throw error;
+    }
+  }
 
   async sendMessage(chatId: string, adminId: string, content: string): Promise<IMessageData> {
     try {
       const newMessage = await messageModel.create({
-        sender: adminId,
+        reciever: [],
+        sender: [adminId],
         content: content,
-        chat: chatId,
+        chat: [chatId],
       });
 
       await ChatModel.findByIdAndUpdate(chatId, { latestmessage: newMessage._id });
@@ -105,11 +124,7 @@ export class AdminRepository implements IadminRepository {
       throw new Error("Error sending message");
     }
   }
-  
-  async saveMessage(messagedata: any): Promise<IMessageData> {
-      const newMessage = new messageModel(messagedata)
-      return await newMessage.save()
-  }
+
   async updateLatestMessage(chatId: Types.ObjectId | string, messageId: Types.ObjectId | string): Promise<void> {
     await ChatModel.findByIdAndUpdate(
         chatId,
@@ -128,4 +143,54 @@ export class AdminRepository implements IadminRepository {
         
       }
   }
+  async getTotalOrdersCount(): Promise<number> {
+    return orderModel.countDocuments({ status: "delivered" });
+  }
+
+  async getTotalOrdersAndProfit(): Promise<{ totalOrdersAmount: number; totalProfit: number }> {
+    try {
+      const deliveredOrders = await orderModel.find({ status: "delivered" });
+      const { totalOrdersAmount, totalProfit } = deliveredOrders.reduce(
+        (totals, order) => {
+          totals.totalOrdersAmount += order.price;
+          totals.totalProfit += order.price * 0.04;
+          return totals;
+        },
+        { totalOrdersAmount: 0, totalProfit: 0 }
+      );
+      return { totalOrdersAmount, totalProfit };
+    } catch (error) {
+      console.error("Error calculating total orders and profit:", error);
+      throw new Error("Error calculating totals.");
+    }
+  }
+
+  async getTotalAgentCount(): Promise<number> {
+    return agentModel.countDocuments({});
+  }
+
+  async getMonthlySales(): Promise<{ month: string; totalOrders: number; totalProfit: number;totalOrdersAmount: number }[]> {
+    return orderModel.aggregate([
+      { $match: { status: "delivered" } },
+      {
+        $group: {
+          _id: { month: { $month: "$createdAt" } },
+          totalOrders: { $sum: 1 },
+          totalProfit: { $sum: { $multiply: ["$price", 0.04] } },
+          totalOrdersAmount: { $sum: "$price" }  
+
+        }
+      },
+      {
+        $project: {
+          month: { $toString: "$_id.month" },
+          totalOrders: 1,
+          totalProfit: 1,
+          totalOrdersAmount: 1
+        }
+      },
+      { $sort: { month: 1 } }
+    ]);
+  }
+
 }

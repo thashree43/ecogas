@@ -1,27 +1,31 @@
-import { ObjectId, Types } from "mongoose";
-import { chat, IUserRepository } from "../domain";
+import { Types } from "mongoose";
 import { userModel } from "../infrastructure/database";
+import { IUserRepository } from "../domain";
 
 export class sendmessageusecase {
-  constructor(private UserRepository: IUserRepository) {}
+  constructor(private userRepository: IUserRepository) {}
 
-  async execute(content: string, chatid: Types.ObjectId | string, userId: Types.ObjectId | string) {
-    const recieverdata = await userModel.findOne({ is_admin: true });
-    if (!recieverdata) {
+  async execute(
+    content: string,
+    chatId: Types.ObjectId | string,
+    userId: Types.ObjectId | string,
+    image?: string | null
+  ) {
+    const receiverData = await userModel.findOne({ is_admin: true });
+    if (!receiverData) {
       throw new Error("Admin user not found");
     }
-    const id = recieverdata._id;
-  
+
     const newMessageData = {
-      reciever: [id],  // Make sure reciever is an array, as per your message schema
-      sender: [userId],
+      reciever: receiverData._id,
+      sender: userId,
       content: content,
-      chat: [chatid],  // Ensure chat is also an array
+      chat: chatId,
+      image: image || null
     };
-  
-    const savedMessage = await this.UserRepository.saveMessage(newMessageData);
-    await this.UserRepository.updateLatestMessage(chatid, savedMessage._id);
+
+    const savedMessage = await this.userRepository.saveMessage(newMessageData);
+    await this.userRepository.updateLatestMessage(chatId, savedMessage._id);
     return savedMessage;
   }
-  
 }

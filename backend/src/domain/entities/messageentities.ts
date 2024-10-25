@@ -6,6 +6,7 @@ export interface IMessageData{
     sender:Types.ObjectId[]
     content:string;
     chat:Types.ObjectId[]
+    image?:string | null
 }
 
 export class Message{
@@ -14,6 +15,7 @@ export class Message{
     sender:Types.ObjectId[]
     content:string;
     chat:Types.ObjectId[]
+    image?:string | null
 
     constructor(data:Partial<IMessageData>){
         this._id = data._id || new Types.ObjectId
@@ -21,5 +23,6 @@ export class Message{
         this.sender = data.sender || []
         this.content = data.content!
         this.chat = data.chat || []
+        this.image = data.image!
     }
 }

@@ -5,6 +5,7 @@ import { MdOutlineSupportAgent } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {useLogoutMutation} from "../../../store/slice/Adminslice"
+import Logo from "../../../layouts/Logocomponent";
 
 const Sidebar: React.FC = () => {
   const [logout] = useLogoutMutation();
@@ -28,12 +29,9 @@ const Sidebar: React.FC = () => {
 
   return (
     <div style={sidebarStyle}>
+              <Logo/>
+
       <div style={logoStyle}>
-        <img
-          src="/photo_2024-08-05_19-22-46.jpg"
-          alt="Ferrari Logo"
-          style={logoImgStyle}
-        />
         <h2>Admin</h2>
       </div>
       <ul style={menuStyle}>

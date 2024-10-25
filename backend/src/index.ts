@@ -137,6 +137,9 @@ io.on("connection", (socket) => {
       }
       const senderId = newMessageReceived.sender[0];
       const recipientIds = newMessageReceived.reciever[0];
+      console.log("the recieved ids",recipientIds);
+      console.log("00000000000000000000000000",senderId);
+      
       console.log("8888888888888888888", recipientIds);
       if (recipientIds.toString() !== senderId) {
         console.log("55555555555555555555555555555555");

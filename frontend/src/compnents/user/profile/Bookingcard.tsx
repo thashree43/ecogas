@@ -1,53 +1,78 @@
 import React, { useState } from 'react';
 import { MapPin, Star, TruckIcon, CalendarIcon, CreditCardIcon, FileTextIcon, ChevronLeftIcon, ChevronRightIcon, Package } from 'lucide-react';
 import { useGetordersQuery } from "../../../store/slice/Userapislice";
+import { generateInvoice } from '../../../constant/Invoiceservice';
+
 import { Order } from "../../../interfacetypes/type";
 
-const BookingCard: React.FC<{ order: Order; index: number }> = ({ order, index }) => (
-    <div className="bg-white rounded-lg shadow-md transition-shadow hover:shadow-lg duration-300 overflow-hidden flex justify-between p-4">
-        <div className="flex flex-col space-y-3">
-            <div className="flex justify-between items-center">
-                <span className="text-xs font-semibold text-gray-500">Booking #{index + 1}</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    order.status === 'Completed' ? 'bg-green-50 text-green-600' :
-                    order.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
-                    'bg-blue-50 text-blue-600'
-                }`}>
-                    {order.status}
-                </span>
+const BookingCard: React.FC<{ order: Order; index: number }> = ({ order, index }) => {
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    const handleInvoiceDownload = async () => {
+        setIsGenerating(true);
+        try {
+            const pdfDoc = generateInvoice(order);
+            pdfDoc.download(`Invoice-${order._id}.pdf`);
+        } catch (error) {
+            console.error('Error generating invoice:', error);
+            // You could add a toast notification here
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-lg shadow-md transition-shadow hover:shadow-lg duration-300 overflow-hidden flex justify-between p-4">
+            <div className="flex flex-col space-y-3">
+                <div className="flex justify-between items-center">
+                    <span className="text-xs font-semibold text-gray-500">Booking #{index + 1}</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        order.status === 'Completed' ? 'bg-green-50 text-green-600' :
+                        order.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
+                        'bg-blue-50 text-blue-600'
+                    }`}>
+                        {order.status}
+                    </span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">{order.company}</h3>
+                <div className="text-gray-500 text-sm space-y-2">
+                    <div className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                        <span>{order.address}</span>
+                    </div>
+                    <div className="flex items-center">
+                        <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
+                        <span>Expected: {new Date(order.expectedat).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        })}</span>
+                    </div>
+                    <div className="flex items-center">
+                        <CreditCardIcon className="w-4 h-4 mr-2 text-gray-400" />
+                        <span>{order.paymentmethod}</span>
+                    </div>
+                </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-800">{order.company}</h3>
-            <div className="text-gray-500 text-sm space-y-2">
-                <div className="flex items-center">
-                    <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                    <span>{order.address}</span>
-                </div>
-                <div className="flex items-center">
-                    <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
-                    <span>Expected: {new Date(order.expectedat).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                    })}</span>
-                </div>
-                <div className="flex items-center">
-                    <CreditCardIcon className="w-4 h-4 mr-2 text-gray-400" />
-                    <span>{order.paymentmethod}</span>
-                </div>
+            <div className="flex flex-col justify-between text-right">
+                <span className="text-sm text-gray-500">Total</span>
+                <span className="text-xl font-bold text-green-600">₹{order.price.toFixed(2)}</span>
+                {order.status.toLowerCase() === "delivered" && (
+                    <button 
+                        onClick={handleInvoiceDownload}
+                        disabled={isGenerating}
+                        className={`mt-2 ${
+                            isGenerating ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'
+                        } text-white text-xs font-semibold py-1 px-4 rounded-lg flex items-center justify-center transition-colors duration-200`}
+                    >
+                        <FileTextIcon className="w-4 h-4 mr-2" />
+                        {isGenerating ? 'Generating...' : 'Invoice'}
+                    </button>
+                )}
             </div>
         </div>
-        <div className="flex flex-col justify-between text-right">
-            <span className="text-sm text-gray-500">Total</span>
-            <span className="text-xl font-bold text-green-600">₹{order.price.toFixed(2)}</span>
-            {order.status.toLowerCase() === "delivered" && (
-                <button className="mt-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold py-1 px-4 rounded-lg flex items-center">
-                    <FileTextIcon className="w-4 h-4 mr-2" />
-                    Invoice
-                </button>
-            )}
-        </div>
-    </div>
-);
+    );
+};
 
 const BookingList: React.FC = () => {
     const userInfoString = localStorage.getItem("userInfo");

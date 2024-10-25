@@ -9,6 +9,7 @@ import {
   orderModel,
 } from "../../infrastructure/database";
 import { Agent, AgentProduct } from "../../domain";
+import { IDashboardData, IOrder } from "../types/interfaces";
 
 export class AgentRepository implements IAgentRepository {
   async saveagent(agentdata: Agent): Promise<IagentData> {
@@ -215,6 +216,68 @@ export class AgentRepository implements IAgentRepository {
     } catch (error) {
       console.error("Error in agentgetsales:", error);
       return null;
+    }
+  }
+  async agentdashboard(agentId: string | Types.ObjectId): Promise<IDashboardData | null> {
+    try {
+      const datas = await agentModel.findOne({ _id: agentId })
+        .populate({
+          path: "orders",
+          model: "Orders",
+          match: { status: "delivered" },
+          select: "price createdAt status expectedat reviewed"
+        })
+        .exec();
+
+      if (!datas) {
+        return null;
+      }
+
+      // Transform orders to match IOrder interface
+      const transformedOrders: IOrder[] = datas.orders.map((order: any) => ({
+        _id: order._id.toString(),
+        createdAt: order.createdAt.toISOString(),
+        expectedat: order.expectedat,
+        status: order.status,
+        price: order.price
+      }));
+
+      // Calculate total sales and profit
+      const totalSales = transformedOrders.reduce((sum, order) => sum + order.price, 0);
+      const totalProfit = totalSales * 0.08; // 8% profit margin
+
+      // Calculate monthly data
+      const monthlyData = Array.from({ length: 12 }, (_, i) => {
+        const month = new Date(new Date().getFullYear(), i);
+        const monthOrders = transformedOrders.filter(order => {
+          const orderDate = new Date(order.createdAt);
+          return orderDate.getMonth() === month.getMonth();
+        });
+
+        const monthlySales = monthOrders.reduce((sum, order) => sum + order.price, 0);
+        const monthlyProfit = monthlySales * 0.08;
+
+        return {
+          month: month.toLocaleString('default', { month: 'short' }),
+          sales: monthlySales,
+          profit: monthlyProfit
+        };
+      });
+
+      const dashboardData: IDashboardData = {
+        _id: datas._id.toString(), // Convert ObjectId to string
+        agentname: datas.agentname,
+        orders: transformedOrders,
+        totalSales,
+        totalProfit,
+        monthlyData
+      };
+
+      return dashboardData;
+
+    } catch (error) {
+      console.error("Error in AgentRepository:", error);
+      throw error;
     }
   }
 }

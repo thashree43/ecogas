@@ -6,7 +6,7 @@ import OrderList from '../Orderlistingagent';
 import Saleslists from "../Saleslist"
 
 const Dashboard: React.FC = () => {
-  const agentName = localStorage.getItem("agentname") || "Agent";
+  const agent = localStorage.getItem("agentInfo") || "Agent";
 
   return (
     <div style={dashboardContainerStyle}>

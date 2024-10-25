@@ -22,6 +22,8 @@ import {
   getmmessageusecase,
 } from "../../usecase";
 import { Types } from "mongoose";
+import multer from "multer";
+const upload = multer({ storage: multer.memoryStorage() });
 export class userController {
   private readonly jwtsecret: string;
   private readonly jwtRefreshSecret: string;
@@ -154,14 +156,14 @@ export class userController {
 
         // Set cookies for access and refresh tokens
         res.cookie("userToken", token, {
-          maxAge: 1 * 24 * 60 * 60 * 1000, 
+          maxAge: 1 * 24 * 60 * 60 * 1000,
           httpOnly: true,
           sameSite: "strict",
-          secure: process.env.NODE_ENV === "production", 
+          secure: process.env.NODE_ENV === "production",
         });
 
         res.cookie("userrefreshToken", refreshtoken, {
-          maxAge: 7 * 24 * 60 * 60 * 1000, 
+          maxAge: 7 * 24 * 60 * 60 * 1000,
           httpOnly: true,
           sameSite: "strict",
           secure: process.env.NODE_ENV === "production",
@@ -321,7 +323,32 @@ export class userController {
       next(error);
     }
   }
+async userlogout(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    res.cookie("userToken", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      expires: new Date(0),
+    });
 
+    res.cookie("userrefreshToken", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      expires: new Date(0),
+    });
+
+    res.status(200).json({ message: 'User has been logged out' });
+  } catch (error) {
+    console.error("Error during logout:", error);
+    res.status(500).json({ message: 'Logout failed' });
+  }
+}
   async getprovider(
     req: Request,
     res: Response,
@@ -539,37 +566,59 @@ export class userController {
       });
     }
   }
+
   async sendmessages(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { content, chatid } = req.body;
-    const token = req.cookies.userToken;
-
     try {
-      const decodedToken = this.verifyToken(token);
-      const userId = decodedToken.id;
-
-      if (!content || !chatid) {
-        console.log("Invalid data passed into request");
-        res
-          .status(400)
-          .json({ error: "Invalid data. Content and chatId are required." });
+      const { content, chatid } = req.body;
+      const image = req.file;
+      
+      console.log("the data from the frontent",image,content,chatid);
+      
+      const token = req.cookies.userToken;
+  
+      console.log("Request body:", req.body);
+      console.log("File:", req.file);
+      
+      if (!token) {
+        res.status(401).json({ error: "No authentication token provided" });
         return;
       }
-
+  
+      const decodedToken = this.verifyToken(token);
+      const userId = decodedToken.id;
+  
+      if (!chatid) {
+        res.status(400).json({ error: "Chat ID is required" });
+        return;
+      }
+  
+      if (!content && !image) {
+        res.status(400).json({ error: "Either content or image is required" });
+        return;
+      }
+  
+      // Create message data object
+      const messageData = {
+        content: content || "",
+        chatId: chatid,
+        userId,
+        image: image ?(req.file as Express.MulterS3.File).location : null 
+      };
+  
       const result = await this.Sendmessageusecase.execute(
-        content,
-        chatid,
-        userId
+        messageData.content,
+        messageData.chatId,
+        userId,
+        messageData.image
       );
-
-      res
-        .status(200)
-        .json({ message: "Message sent successfully", data: result });
+  
+      res.status(200).json({ message: "Message sent successfully", data: result });
     } catch (error) {
-      console.error("Error sending message", error);
+      console.error("Error sending message:", error);
       res.status(500).json({ error: "Failed to send message", details: error });
     }
   }
@@ -579,6 +628,7 @@ export class userController {
     next: NextFunction
   ): Promise<void> {
     const chatId = req.params.chatid;
+
     console.log(chatId, "the id for chat ");
     try {
       const messagesData = await this.Getmessageusecase.execute(chatId);

@@ -10,9 +10,9 @@ import {
   admingetallorderusecasse,
   getcustomerusecase,
   GetMessagesUseCase,
-  SendMessageUseCase,
+  AdminSendMessageUseCase,
   saleslitingusecase,
-
+  admindashboardusecase,
 } from "../../usecase";
 import nodemailer from "nodemailer";
 import {generateRefreshToken, generatetoken} from "../../interface/middleware/authtoken"
@@ -29,8 +29,9 @@ export class AdminController {
     private AdminGetallOrdersInstance: admingetallorderusecasse,
     private GetCustomeUseCaseInstance:getcustomerusecase,
     private GetMessagesUseCaseInstance:GetMessagesUseCase,
-    private SendMessageUseCaseInstance:SendMessageUseCase,
+    private SendMessageUseCaseInstance:AdminSendMessageUseCase,
     private SaleslistingUseCaseInstance:saleslitingusecase,
+    private AdminDashboardusecase:admindashboardusecase,
 
   ) {
     const secret = process.env.JWT_ACCESS_SECRET;
@@ -325,7 +326,10 @@ export class AdminController {
   async getMessages(req: Request, res: Response, next: NextFunction) {
     try {
       const { chatId } = req.params;
+      console.log("admin chatid getmessage  ",chatId);
+      
       const messages = await this.GetMessagesUseCaseInstance.execute(chatId);
+
       res.json(messages);
     } catch (error) {
       console.error(error);
@@ -333,10 +337,13 @@ export class AdminController {
     }
   }
 
-  async sendMessage(req: Request, res: Response, next: NextFunction) {
+  async  sendMessage(req: Request, res: Response, next: NextFunction) {
     try {
       const { chatId, content } = req.body;
+      const image = req.file
       console.log(chatId,"the whole datas");
+      
+
       
       const admintoken = req.cookies.adminToken;
       if (!admintoken) {
@@ -346,11 +353,14 @@ export class AdminController {
       const decodedToken = this.verifyToken(admintoken);
       const adminId = decodedToken.id
 
-
+      let imageUrl: string | null = null;
+      if (image) {
+        imageUrl = image ?(req.file as Express.MulterS3.File).location : null  // AWS S3 URL
+      }
 
       console.log(adminId,"the adminId in the control");
 
-      const message = await this.SendMessageUseCaseInstance.execute(chatId,adminId, content);
+      const message = await this.SendMessageUseCaseInstance.execute(chatId,adminId, content,imageUrl);
       res.json(message);
     } catch (error) {
       console.error(error);
@@ -365,6 +375,19 @@ export class AdminController {
     } catch (error) {
       console.error(error,"error occured while getting sales lists");
       throw new Error("error may occured")
+      
+    }
+  }
+  async getdashboard(req: Request, res: Response, next: NextFunction){
+    try {
+      const dashboardData = await this.AdminDashboardusecase.execute();
+      console.log("the datas in the admin dashbpard",dashboardData);
+      
+      res.status(200).json(dashboardData);
+    } catch (error) {
+      console.error(error);
+      console.log("error in the controller admin side ");
+      
       
     }
   }

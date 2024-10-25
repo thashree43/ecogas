@@ -1,56 +1,126 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TruckIcon, CalendarIcon, CreditCardIcon, FileTextIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from 'lucide-react';
+import { 
+  TruckIcon, CalendarIcon, CreditCardIcon, FileTextIcon, 
+  ChevronLeftIcon, ChevronRightIcon, SearchIcon,
+  PackageIcon, MapPinIcon, PhoneIcon, FilterIcon
+} from 'lucide-react';
 import { useOrderlistingQuery, useMarkorderdeliverMutation } from "../../store/slice/Brokerslice";
 import { toast } from 'react-toastify';
-import { Order,} from "../../interfacetypes/type"
+import { Order } from "../../interfacetypes/type";
 import debounce from 'lodash.debounce';
 
-const OrderCard: React.FC<{ order: Order; index: number; onDelivered: (orderId: string) => void }> = ({ order, index, onDelivered }) => (
-  <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col h-full text-sm">
-    <div className="flex justify-between items-center mb-2">
-      <span className="text-xs font-semibold text-gray-500">Order #{index + 1}</span>
-      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-        order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-        order.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-        'bg-blue-100 text-blue-800'
-      }`}>
-        {order.status}
-      </span>
-    </div>
-    <h3 className="text-base font-semibold mb-1">{order.company}</h3>
-    <div className="flex items-center mb-1">
-      <TruckIcon className="w-3 h-3 mr-1 text-gray-500" />
-      <span className="text-xs text-gray-600 truncate">{order.address}</span>
-    </div>
-    <div className="flex items-center mb-1">
-      <CalendarIcon className="w-3 h-3 mr-1 text-gray-500" />
-      <span className="text-xs text-gray-600">{new Date(order.expectedat).toLocaleDateString()}</span>
-    </div>
-    <div className="flex items-center mb-2">
-      <CreditCardIcon className="w-3 h-3 mr-1 text-gray-500" />
-      <span className="text-xs text-gray-600">{order.paymentmethod}</span>
-    </div>
-    <div className="mt-auto">
-      <div className="text-base font-bold text-green-600 mb-2">₹{order.price.toFixed(2)}/-</div>
-      {order.status.toLowerCase() === "delivered" ? (
-        <button className="w-full bg-gray-200 text-gray-600 font-semibold py-1 px-2 rounded text-xs flex items-center justify-center cursor-not-allowed" disabled>
-          <FileTextIcon className="w-3 h-3 mr-1" />
-          Delivered
-        </button>
-      ) : (
-        <button 
-          className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-2 rounded text-xs flex items-center justify-center"
-          onClick={() => onDelivered(order._id)}
-        >
-          <TruckIcon className="w-3 h-3 mr-1" />
-          Mark as Delivered
-        </button>
-      )}
-    </div>
+interface DashboardProps {
+  children?: React.ReactNode;
+  className?: string;
+  variant?: string;
+}
+
+interface BadgeProps extends DashboardProps {
+  variant?: 'success' | 'warning' | 'info' | 'default'; // Define the valid variants
+}
+
+// Custom Card Component
+const Card: React.FC<DashboardProps> = ({ children, className = "" }) => (
+  <div className={`bg-white rounded-xl shadow-lg ${className}`}>
+    {children}
   </div>
 );
 
-const OrderListCards: React.FC = () => {
+// Custom Badge Component
+const Badge: React.FC<BadgeProps> = ({ children, variant = "default" }) => {
+  const variants = {
+    success: "bg-green-100 text-green-800",
+    warning: "bg-yellow-100 text-yellow-800",
+    info: "bg-blue-100 text-blue-800",
+    default: "bg-gray-100 text-gray-800"
+  };
+
+  return (
+    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${variants[variant]}`}>
+      {children}
+    </span>
+  );
+};
+
+// Define the type for the OrderCard props
+interface OrderCardProps {
+  order: Order;
+  index: number;
+  onDelivered: (orderId: string) => void; // Define the type of onDelivered function
+}
+
+const OrderCard: React.FC<OrderCardProps> = ({ order, index, onDelivered }) => {
+  const statusVariant: { [key: string]: 'success' | 'warning' | 'info' | 'default' } = {
+    Delivered: "success",
+    Pending: "warning",
+    default: "info"
+  };
+
+  return (
+    <Card className="p-6 transition-all duration-300 hover:shadow-xl hover:transform hover:scale-[1.02]">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center space-x-2">
+          <PackageIcon className="w-6 h-6 text-indigo-600" />
+          <div>
+            <p className="text-xs font-medium text-gray-500">Order #{index + 1}</p>
+            <h3 className="text-lg font-bold text-gray-900">{order.company}</h3>
+          </div>
+        </div>
+        <Badge variant={statusVariant[order.status] as 'success' | 'warning' | 'info' | 'default'}>
+          {order.status}
+        </Badge>
+      </div>
+
+      <div className="space-y-3 mb-6">
+        <div className="flex items-center space-x-2 text-gray-600">
+          <MapPinIcon className="w-4 h-4 text-gray-400" />
+          <span className="text-sm">{order.address}</span>
+        </div>
+        <div className="flex items-center space-x-2 text-gray-600">
+          <CalendarIcon className="w-4 h-4 text-gray-400" />
+          <span className="text-sm">{new Date(order.expectedat).toLocaleDateString('en-US', { 
+            day: 'numeric', 
+            month: 'short', 
+            year: 'numeric' 
+          })}</span>
+        </div>
+        <div className="flex items-center space-x-2 text-gray-600">
+          <CreditCardIcon className="w-4 h-4 text-gray-400" />
+          <span className="text-sm">{order.paymentmethod}</span>
+        </div>
+        <div className="flex items-center space-x-2 text-gray-600">
+          <PhoneIcon className="w-4 h-4 text-gray-400" />
+          <span className="text-sm">{order.mobile}</span>
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+        <div className="text-lg font-bold text-indigo-600">
+          ₹{order.price.toLocaleString('en-IN', { 
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2 
+          })}
+        </div>
+        {order.status.toLowerCase() === "delivered" ? (
+          <button className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg flex items-center space-x-2 cursor-not-allowed" disabled>
+            <FileTextIcon className="w-4 h-4" />
+            <span>Delivered</span>
+          </button>
+        ) : (
+          <button 
+            onClick={() => onDelivered(order._id)}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+          >
+            <TruckIcon className="w-4 h-4" />
+            <span>Mark as Delivered</span>
+          </button>
+        )}
+      </div>
+    </Card>
+  );
+};
+
+const OrderListCards = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -90,7 +160,14 @@ const OrderListCards: React.FC = () => {
     try {
       const result = await updated(orderId).unwrap();
       if (result.success) {
-        toast.success("Successfully updated status");
+        toast.success("Order marked as delivered successfully", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
         setUpdateTrigger(prev => prev + 1);
       } else {
         toast.error("Failed to update status: " + (result.error || "Unknown error"));
@@ -103,102 +180,87 @@ const OrderListCards: React.FC = () => {
 
   if (userLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center h-screen">
+        <div className="relative w-24 h-24">
+          <div className="absolute top-0 left-0 w-full h-full border-4 border-indigo-200 rounded-full animate-ping"></div>
+          <div className="absolute top-0 left-0 w-full h-full border-4 border-indigo-600 rounded-full animate-spin"></div>
+        </div>
       </div>
     );
   }
 
   if (userError) {
-    return <div className="text-center text-red-500 font-semibold">Error loading orders. Please try again later.</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <div className="text-red-500 text-xl font-semibold">Unable to load orders</div>
+        <button 
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+        >
+          Try Again
+        </button>
+      </div>
+    );
   }
 
   const orders = Array.isArray(orderResponse?.result?.orders) ? orderResponse.result.orders : [];
 
-  const filteredOrders = orders.filter((order: Order) =>
+  const filteredOrders = orders.filter((order: Order) => 
     order.company.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
     order.address.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
     order.mobile.toString().includes(debouncedSearchTerm)
   );
-
-  if (filteredOrders.length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800">My Orders</h2>
-        <div className="mb-4 relative">
-          <input
-            type="text"
-            placeholder="Search orders..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="w-full p-2 pl-8 border rounded-md"
-          />
-          <SearchIcon className="absolute left-2 top-2.5 h-5 w-5 text-gray-400" />
-        </div>
-        <div className="text-center text-gray-500">No orders found.</div>
-      </div>
-    );
-  }
 
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold mb-6 text-gray-800">My Orders</h2>
-      <div className="mb-4 relative">
-        <input
-          type="text"
-          placeholder="Search orders..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="w-full p-2 pl-8 border rounded-md"
-        />
-        <SearchIcon className="absolute left-2 top-2.5 h-5 w-5 text-gray-400" />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Order List</h2>
+        <div className="flex space-x-2">
+          <input
+            type="text"
+            placeholder="Search orders..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="px-4 py-2 border border-gray-300 rounded-lg"
+          />
+          <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg">
+            <SearchIcon className="w-5 h-5" />
+          </button>
+        </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {currentOrders.map((order: Order, index: number) => (
-          <OrderCard key={order._id} order={order} index={indexOfFirstOrder + index} onDelivered={handleDelivered} />
+          <OrderCard key={order._id} order={order} index={index + indexOfFirstOrder} onDelivered={handleDelivered} />
         ))}
       </div>
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-8">
-          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-            <button
-              onClick={() => paginate(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${currentPage === 1 ? 'cursor-not-allowed opacity-50' : ''}`}
-            >
-              <span className="sr-only">Previous</span>
-              <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
-            </button>
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i}
-                onClick={() => paginate(i + 1)}
-                className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${currentPage === i + 1 ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'text-gray-500 hover:bg-gray-50'}`}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => paginate(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${currentPage === totalPages ? 'cursor-not-allowed opacity-50' : ''}`}
-            >
-              <span className="sr-only">Next</span>
-              <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
-            </button>
-          </nav>
+
+      <div className="flex justify-between">
+        <button 
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50"
+        >
+          <ChevronLeftIcon className="w-4 h-4" />
+        </button>
+        <div className="text-lg">
+          Page {currentPage} of {totalPages}
         </div>
-      )}
+        <button 
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50"
+        >
+          <ChevronRightIcon className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 };
-
 
 export default OrderListCards;

@@ -7,12 +7,14 @@ import ResetPasswordForm from "../compnents/user/mainpages/NewPassword";
 import UserProductroute from "../routes/protectroute/UserProductRoute";
 import UserVerifyroute from "./protectroute/UserVerifyroute";
 import GasBookingPage from "../compnents/user/mainpages/Bookingpage";
-import ProfilePage from "../compnents/user/profile/Profilepage";
-import BookingProfilePage from "../compnents/user/profile/SampleProfile";
+import BookingProfilePage from "../compnents/user/profile/Profilepage";
+import LoginComponent from "../compnents/user/registerpart/LoginComponent";
 
 const UserRoute: React.FC = () => {
   return (
     <Routes>
+      
+
       <Route
         path="/"
         element={
@@ -63,8 +65,7 @@ const UserRoute: React.FC = () => {
             
         }
       />
-     <Route path="/profile" element = {<ProfilePage/>}/>
-     <Route path="/pro" element={<BookingProfilePage/>}/>
+     <Route path="/profile" element={<BookingProfilePage/>}/>
 
     </Routes>
   );

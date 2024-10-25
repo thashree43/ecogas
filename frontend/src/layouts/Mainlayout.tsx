@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Footer from './Footer';
 import Header from './Header';
 import { useSelector } from 'react-redux';
@@ -12,7 +12,8 @@ const Mainlayout = ({ children }: { children: React.ReactNode }) => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   
-  
+  const footerRef = useRef<HTMLDivElement>(null);
+
 
   const handleLoginClose = () => {
     setIsLoginOpen(false);
@@ -38,9 +39,9 @@ const Mainlayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Header onAccountClick={handleLoginOpen} />
+      <Header onAccountClick={handleLoginOpen} footerRef={footerRef} />
       <main style={{ flexGrow: 1 }}>{children}</main>
-      <Footer />
+      <Footer  ref={footerRef}/>
       <LoginPage isOpen={isLoginOpen} onClose={handleLoginClose} onRegisterClick={handleRegisterOpen} />
       <SignUpPage isOpen={isRegisterOpen} onClose={handleRegisterClose} />
     </div>

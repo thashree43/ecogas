@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { userController } from "../controller/userController";
-
 import {
   signupusecase,
   VerifyOtpUseCase,
@@ -26,7 +25,28 @@ import {
 } from "../../infrastructure/repository";
 import { Otpservice } from "../../infrastructure/service/Otpservice";
 import { userauth } from "../middleware/userauth";
+import multer from "multer";
+import multerS3 from "multer-s3"; // Import multerS3
+import { S3Client } from "@aws-sdk/client-s3";
 
+const s3Client = new S3Client({
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+  },
+});
+
+const upload = multer({
+  storage: multerS3({
+    s3: s3Client,
+    bucket: "thashree",
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString() + "-" + file.originalname);
+    },
+  }),
+});
 // Create instances of repositories, services, and use cases
 const userRepositoryInstance = new UserRepository();
 const OtpServiceInstance = new Otpservice();
@@ -67,7 +87,7 @@ const DeleteBookUseCaseInstance = new deletebookusecase(userRepositoryInstance);
 const OrderPlaceUseCaseInstance = new orderplaceusecase(userRepositoryInstance);
 const ListOrderUserSideUseCaseInstance = new listorderusersideusecase(userRepositoryInstance)
 const UserChatUseCaseInstance = new usechatusecase(userRepositoryInstance)
-const SendMessageUseCaseInstance = new sendmessageusecase(userRepositoryInstance)
+const SendMessageUseCaseInstance = new sendmessageusecase(userRepositoryInstance);
 const GetMessageUseCaseInstance = new getmmessageusecase(userRepositoryInstance)
 // instances of the user controller
 const userControllerInstance = new userController(
@@ -115,6 +135,8 @@ router.post("/resetpassword", (req, res, next) =>
 router.patch("/updatepassword", (req, res, next) =>
   userControllerInstance.resetpassword(req, res, next)
 );
+router.post('/logout',(req,res,next)=>
+userControllerInstance.userlogout(req,res,next))
 
 router.get(
   "/gas-providers/:pincode",
@@ -146,7 +168,7 @@ router.get('/getorders/:id', userauth, (req, res, next) => userControllerInstanc
 router.post('/userchat/:uderId', (req, res, next) =>
   userControllerInstance.userchat(req, res, next))
 
-router.post('/sendmessages',(req,res,next)=>
+router.post('/sendmessages',userauth,upload.single("image"),(req,res,next)=>
 userControllerInstance.sendmessages(req,res,next))
 
 router.get("/getmessage/:chatid",(req,res,next)=>

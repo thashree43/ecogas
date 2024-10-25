@@ -10,11 +10,35 @@ import {
   admingetallorderusecasse,
   getcustomerusecase,
   GetMessagesUseCase,
-  SendMessageUseCase,
+  AdminSendMessageUseCase,
   saleslitingusecase,
+  admindashboardusecase,
 
 } from "../../usecase";
 import { adminauth } from "../middleware/adminauth";
+import multer from "multer";
+import multerS3 from "multer-s3"; // Import multerS3
+import { S3Client } from "@aws-sdk/client-s3";
+
+const s3Client = new S3Client({
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+  },
+});
+
+const upload = multer({
+  storage: multerS3({
+    s3: s3Client,
+    bucket: "thashree",
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString() + "-" + file.originalname);
+    },
+  }),
+});
+
 
 const AdminRepositoryInstance = new AdminRepository();
 
@@ -32,8 +56,9 @@ const AdminGetallOrderUseCaseInstance = new admingetallorderusecasse(
 );
 const GetCustomerUseCaseInstance = new getcustomerusecase(AdminRepositoryInstance)
 const GetMessageUseCaseInstance = new GetMessagesUseCase(AdminRepositoryInstance)
-const SendMessageUseCaseInstance = new SendMessageUseCase(AdminRepositoryInstance)
+const SendMessageUseCaseInstance = new AdminSendMessageUseCase(AdminRepositoryInstance)
 const SaleslistingUseCaseInstance = new saleslitingusecase(AdminRepositoryInstance)
+const AdminDashboardUseCaseInstance = new admindashboardusecase(AdminRepositoryInstance)
 const AdminControllerInstance = new AdminController(
   AdminLoginUseCaseInstance,
   GetUserUseCaseInstance,
@@ -44,8 +69,11 @@ const AdminControllerInstance = new AdminController(
   GetCustomerUseCaseInstance,
   GetMessageUseCaseInstance,
   SendMessageUseCaseInstance,
-  SaleslistingUseCaseInstance
+  SaleslistingUseCaseInstance,
+  AdminDashboardUseCaseInstance,
+  
 );
+
 
 let router = Router();
 router.post("/adminlogin", (req, res, next) =>
@@ -84,10 +112,13 @@ router.get('/getmessages/:chatId', (req, res, next) =>
   AdminControllerInstance.getMessages(req, res, next)
 );
 
-router.post('/sendmessage', (req, res, next) =>
+router.post('/sendmessage', adminauth,upload.single("image"),(req, res, next) =>
   AdminControllerInstance.sendMessage(req, res, next)
 );
 router.get('/saleslists',adminauth,(req,res,next)=>
 AdminControllerInstance.saleslisting(req,res,next)
+)
+router.get("/admindashboard",adminauth,(req,res,next)=>
+AdminControllerInstance.getdashboard(req,res,next)
 )
 export { router as adminroute };

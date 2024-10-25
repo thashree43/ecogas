@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Send, X, ImageIcon } from "lucide-react"; // Added ImageIcon for image uploads
-import {
-  useSendmessageMutation,
-  useGetmessagesQuery,
-} from "../../../store/slice/Userapislice";
+import { Send, X, ImageIcon } from "lucide-react"; 
+import { useSendmessageMutation, useGetmessagesQuery } from "../../../store/slice/Userapislice";
 import { Socket } from "socket.io-client";
 import io from "socket.io-client";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
 import { Message } from "../../../interfacetypes/type";
+import { toast } from "react-toastify";
 
 interface ChatWidgetProps {
   isOpen: boolean;
@@ -19,22 +17,14 @@ const ENDPOINTS = "http://localhost:3000";
 let socket: Socket<DefaultEventsMap, DefaultEventsMap>;
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, chatId }) => {
-  const [userdata, setUserdata] = useState<{
-    username?: string;
-    _id?: string;
-  } | null>(null);
+  const [userdata, setUserdata] = useState<{ username?: string; _id?: string } | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
-  const [image, setImage] = useState<File | null>(null); // State to store selected image
+  const [image, setImage] = useState<File | null>(null); 
   const [socketconnected, setSocketconnected] = useState(false);
-  const [sendmessages] = useSendmessageMutation();
+  const [sendmessages, { isLoading: isSending }] = useSendmessageMutation();
 
-  const {
-    data: messagesData,
-    isLoading: messagesLoading,
-    isError: messagesError,
-    refetch: refetchMessages,
-  } = useGetmessagesQuery(chatId || "");
+  const { data: messagesData, isLoading: messagesLoading, isError: messagesError, refetch: refetchMessages } = useGetmessagesQuery(chatId || "");
 
   useEffect(() => {
     if (!socket) {
@@ -48,9 +38,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, chatId }) => {
       socket.on("message recieved", (newMessageReceived: Message) => {
         if (chatId === newMessageReceived.chat?.[0]) {
           setMessages((prevMessages) => {
-            const exists = prevMessages.some(
-              (msg) => msg._id === newMessageReceived._id
-            );
+            const exists = prevMessages.some(msg => msg._id === newMessageReceived._id);
             if (!exists) {
               return [...prevMessages, newMessageReceived];
             }
@@ -101,51 +89,85 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, chatId }) => {
     }
   }, [chatId, refetchMessages]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if ((!currentMessage.trim() && !image) || !userdata?._id || !chatId) return;
+const handleSendMessage = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    try {
-      const newMessage: any = {
-        content: currentMessage,
-        sender: [userdata._id],
-        createdAt: new Date().toISOString(),
-      };
+  if (!chatId || (!currentMessage.trim() && !image) || !userdata?._id || isSending) {
+    console.log("Validation failed:", { chatId, message: currentMessage, image, userId: userdata?._id });
+    return;
+  }
 
-      if (image) {
-        // If image is selected, convert it to base64 or upload it to a server and get the URL
-        const imageUrl = URL.createObjectURL(image); // Example: replace this with your image upload logic
-        newMessage.image = imageUrl; // Add image URL to message
-      }
+  try {
+    const formData = new FormData();
+    formData.append("chatid", chatId);
 
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-      const response = await sendmessages({
-        chatid: chatId,
-        content: currentMessage,
-        image: image ? newMessage.image : null, // Send image with message if it exists
-      }).unwrap();
-
-      if (response) {
-        socket.emit("new message", response.data);
-        setCurrentMessage("");
-        setImage(null); // Clear the selected image after sending
-        refetchMessages();
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
+    if (currentMessage.trim()) {
+      formData.append("content", currentMessage.trim());
     }
+
+    if (image) {
+      formData.append("image", image);
+    }
+
+    // Create temporary message for optimistic update
+    const tempMessage = {
+      _id: `temp-${Date.now()}`,
+      content: currentMessage.trim(),
+      image: image ? URL.createObjectURL(image) : null,
+      sender: userdata._id,
+      chat: chatId,
+      createdAt: new Date()
+    };
+
+    setMessages(prev => [...prev, tempMessage]);
+    setCurrentMessage("");
+    setImage(null);
+
+    const response = await sendmessages(formData).unwrap();
+
+    if (response?.data) {
+      setMessages(prev =>
+        prev.map(msg => msg._id === tempMessage._id ? response.data : msg)
+      );
+
+      if (socketconnected) {
+        socket.emit("new message", response.data);
+      }
+    }
+  } catch (error) {
+    console.error("Error sending message:", error);
+    setMessages(prev => prev.filter(msg => msg._id !== `temp-${Date.now()}`));
+    // Show error to user
+    toast.error("Failed to send message. Please try again.");
+  }
+};
+
+  // Image handling with validation
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be less than 5MB");
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only JPG, PNG, and GIF files are allowed");
+      return;
+    }
+
+    setImage(file);
   };
 
-  const isSender = (message: any) => {
+  const isSender = (message: Message) => {
     return message?.sender?.[0] === userdata?._id;
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setImage(e.target.files[0]);
-    }
-  };
+ 
 
   if (!isOpen) return null;
 
@@ -160,8 +182,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, chatId }) => {
 
       <div className="flex-1 p-4 overflow-auto">
         <p className="text-sm mb-4">
-          Welcome {userdata?.username ? userdata.username : "Guest"}! How can we
-          help you today?
+          Welcome {userdata?.username ? userdata.username : "Guest"}! How can we help you today?
         </p>
 
         {messagesLoading && <p>Loading messages...</p>}
@@ -170,11 +191,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, chatId }) => {
         {messages.length > 0 ? (
           <div className="space-y-4">
             {messages.map((msg, index) =>
-              msg && msg.content ? (
+              msg && (msg.content || msg.image) ? ( 
                 <ChatMessage
                   key={index}
                   message={msg.content}
-                  image={msg.image} // Add image property to ChatMessage component
+                  image={msg.image ?? null}
                   isUser={isSender(msg)}
                 />
               ) : null
@@ -197,7 +218,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, chatId }) => {
           <input
             type="file"
             accept="image/*"
-            onChange={handleImageChange} // Image selection handler
+            onChange={handleImageChange} 
             className="hidden"
             id="image-upload"
           />
@@ -211,28 +232,53 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, chatId }) => {
             <Send size={20} />
           </button>
         </div>
+
+        {/* Display selected image preview in a smaller format */}
+        {image && (
+          <div className="mt-2 flex items-center">
+            <img
+              src={URL.createObjectURL(image)}
+              alt="Selected"
+              className="w-12 h-12 rounded-md object-cover" // Smaller image preview
+            />
+            <button
+              type="button"
+              className="ml-2 text-red-500"
+              onClick={() => setImage(null)} // Clear image on button click
+            >
+              Remove
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );
 };
 
-const ChatMessage: React.FC<{ message: string; image?: string; isUser: boolean }> = ({
-  message,
-  image, // Added image prop
-  isUser,
-}) => (
-  <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-    <div
-      className={`max-w-[80%] px-4 py-2 rounded-lg ${
+const ChatMessage: React.FC<{ 
+    message?: string;
+    image?: string | null;
+    isUser: boolean;
+  }> = ({ message, image, isUser }) => (
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+      <div className={`max-w-[80%] px-4 py-2 rounded-lg ${
         isUser
           ? "bg-blue-500 text-white rounded-br-none"
           : "bg-gray-200 text-black rounded-bl-none"
-      }`}
-    >
-      {image && <img src={image} alt="chat image" className="mb-2" />} {/* Display image if present */}
-      {message}
+      }`}>
+        {image && (
+          <div className="mb-2">
+            <img 
+              src={image} 
+              alt="chat image" 
+              className="max-w-full rounded-lg"
+              loading="lazy"
+            />
+          </div>
+        )}
+        {message && <div>{message}</div>}
+      </div>
     </div>
-  </div>
-);
+  );
 
 export default ChatWidget;

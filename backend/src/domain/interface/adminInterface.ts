@@ -16,4 +16,10 @@ export interface IadminRepository {
     updateLatestMessage(chatId: Types.ObjectId | string, messageId: Types.ObjectId | string): Promise<void>;
     saveMessage(messagedata: any): Promise<IMessageData>;
     getsales():Promise<IagentData[] | null>;
+      // New methods for the dashboard
+      getTotalOrdersCount(): Promise<number>;
+    getTotalOrdersAndProfit(): Promise<{ totalOrdersAmount: number; totalProfit: number }>;
+    getTotalAgentCount(): Promise<number>;
+    getMonthlySales(): Promise<{ month: string; totalOrders: number; totalProfit: number;totalOrdersAmount: number }[]>;
+      
 }

@@ -9,6 +9,8 @@ import {
   getordersfromagentusecase,
   updateorderstatususecase,
   agentsaleslistusecase,
+  agentdashboardusecase,
+
 } from "../../usecase";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Types } from "mongoose";
@@ -28,6 +30,7 @@ export class agentController {
     private GetordersfromAgent: getordersfromagentusecase,
     private UpdateOrderStatus: updateorderstatususecase,
     private Agentsaleslistusecase:agentsaleslistusecase,
+    private AgentDashboarusecase:agentdashboardusecase
 
   ) {
     this.jwtSecret = process.env.JWT_ACCESS_SECRET || "default_jwt_secret";
@@ -146,6 +149,31 @@ export class agentController {
       res.status(401).json({ message: 'Invalid or expired refresh token' });
     }
   }
+agentlogout = async(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    res.cookie("agentToken", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      expires: new Date(0),
+    });
+
+    res.cookie("agentRefreshToken", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      expires: new Date(0),
+    });
+
+    res.status(200).json({ message: 'Agent has been logged out' });
+  } catch (error) {
+    
+  }
+}
 
   addProduct = async (
     req: Request,
@@ -331,7 +359,6 @@ export class agentController {
       console.log("ID for listing sales:", agentId);
 
       const data = await this.Agentsaleslistusecase.execute(agentId);
-      console.log("the get sales datas",data);
       
       if (!data) {
         res.status(404).json({ success: false, message: "No sales data found" });
@@ -348,6 +375,30 @@ export class agentController {
         success: false, 
         message: "Internal server error" 
       });
+    }
+  }
+  getdashboard = async(
+    req:Request,
+    res:Response,
+    next:NextFunction
+  ):Promise<void>=>{
+    const token = req.cookies.agentToken;
+    console.log(" the tokenin the controller ",token);
+    try {
+      const decodedToken = jwt.verify(token, this.jwtSecret) as {
+        id: string;
+      };
+      console.log(decodedToken,"ythe decoded toen ");
+      
+      const agentId = decodedToken.id;
+      console.log("agentid be thus ",agentId);
+      const datas = await this.AgentDashboarusecase.execute(agentId)
+      
+
+      res.json(datas)
+    } catch (error) {
+      console.error(error);
+      
     }
   }
 }

@@ -101,7 +101,14 @@ export interface MenuItemProps {
   active?: boolean;
   onClick: () => void;
 }
-
+export interface ComponentProps {
+  icon?: any;
+  text?: string;
+  active?: boolean;
+  title?: string;
+  value?: string | number;
+  onClick?: () => void;
+}
 // Define the function props interface properly
 export interface FunctionData {
   refetch: () => void;
@@ -172,6 +179,9 @@ export interface Message {
   sender: string;
   chat?: { _id: string }[];
   createdAt: Date;
+  text?: string;
+  image?: string | null; // Allow image to be null
+  timestamp?: Date;
 }
 
 export interface Chat {
@@ -223,4 +233,28 @@ export interface Sale {
 }
 
 
+// chart for dashboard
+export interface DashboardData {
+  activeTickets: number;
+  todaysAppointments: number;
+  pendingReviews: number;
+  monthlyDistribution: MonthlyData[];
+}
 
+export interface MonthlyData {
+  month: string;
+  value: number;
+}
+export interface MonthlySales {
+  month: string; // or number, based on your response
+  totalOrdersAmount: number;
+  totalProfit: number;
+}
+
+export interface AdminDashboardData {
+  totalOrdersAmount: number;
+  totalProfit: number;
+  monthlySales: MonthlySales[];
+  totalAgentCount: number;
+  totalOrdersCount: number;
+}

@@ -174,9 +174,15 @@ export class UserRepository implements IUserRepository {
         throw error;
     }
 }
-async saveMessage(messagedata: any): Promise<Message> {   // Corrected the return type to Message
-  const newMessage = new messageModel(messagedata);
-  return await newMessage.save();                         // Corrected save logic
+async saveMessage(messageData: {
+  receiver: Types.ObjectId;
+  sender: Types.ObjectId;
+  content: string;
+  chat: Types.ObjectId;
+  image?: string | null;
+}): Promise<Message> {
+  const newMessage = new messageModel(messageData);
+  return await newMessage.save();
 }
 
 async findmessagebyid(messageId: Types.ObjectId | string): Promise<Message | null> {
@@ -184,11 +190,12 @@ async findmessagebyid(messageId: Types.ObjectId | string): Promise<Message | nul
                            .populate("sender")
                            .populate("chat.user");
 }
+
 async updateLatestMessage(chatId: Types.ObjectId | string, messageId: Types.ObjectId | string): Promise<void> {
   await ChatModel.findByIdAndUpdate(
-      chatId,
-      { $push: { latestmessage: messageId } }, 
-      { new: true } 
+    chatId,
+    { latestMessage: messageId },
+    { new: true }
   );
 }
 async getmessages(chatid: Types.ObjectId | string): Promise<IMessageData | null> {

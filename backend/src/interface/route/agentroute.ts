@@ -10,6 +10,8 @@ import {
   getordersfromagentusecase,
   updateorderstatususecase,
   agentsaleslistusecase,
+  agentdashboardusecase,
+
 } from "../../usecase";
 import { AgentRepository } from "../../infrastructure/repository";
 import multer from "multer";
@@ -81,6 +83,7 @@ const UpdateOrderStatusUseCaseInstance = new updateorderstatususecase(
   AgentRepositoryInstance
 );
 const AgentSalesListUseCaseInstance = new agentsaleslistusecase(AgentRepositoryInstance)
+const AgentDashboardUseCaseInstance = new agentdashboardusecase(AgentRepositoryInstance)
 // conntroller
 const agentControllerInstance = new agentController(
   AgentApplyUsecaseInstance,
@@ -91,7 +94,8 @@ const agentControllerInstance = new agentController(
   DeleteProductUseCaseInstance,
   GetOrdersFromAgentUseCaseInstance,
   UpdateOrderStatusUseCaseInstance,
-  AgentSalesListUseCaseInstance
+  AgentSalesListUseCaseInstance,
+  AgentDashboardUseCaseInstance
 );
 
 const router = Router();
@@ -101,6 +105,7 @@ router.post("/agentlogin", agentControllerInstance.agentlogin);
 router.post("/agentrefresh-token", (req, res, next) =>
   agentControllerInstance.agentrefreshToken(req, res, next)
 );
+router.post('/agentlogout',agentControllerInstance.agentlogout)
 router.post("/addproduct", agentauth, agentControllerInstance.addProduct);
 router.get("/getproduct", agentauth, agentControllerInstance.listproduct);
 router.patch("/editproduct", agentauth, agentControllerInstance.editproduct);
@@ -108,6 +113,7 @@ router.delete("/deleteproduct/:id", agentauth, agentControllerInstance.deletePro
 router.get("/agentgetorders", agentauth, agentControllerInstance.getordersin);
 router.patch("/orderstatus/:orderid", agentauth, agentControllerInstance.statusupdate);
 router.get("/getsales/:agentid",agentauth,agentControllerInstance.getsaleslists )
+router.get("/agentdashboard",agentauth,agentControllerInstance.getdashboard)
 export { router as agentroute };
 
 // Error handling middleware (add this to your main app file)

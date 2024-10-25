@@ -81,6 +81,25 @@ interface Agent {
   products: CompanyData[];
   orders: Order[];
 }
+interface SendMessageResponse {
+  _id: string;
+  content: string;
+  sender: string[];
+  chat: string[];
+  image?: string;
+  createdAt: Date;
+}
+interface MonthlyDistribution {
+  month: string;
+  value: number;
+}
+
+interface DashboardData {
+  activeTickets: number;
+  todaysAppointments: number;
+  pendingReviews: number;
+  monthlyDistribution: MonthlyDistribution[];
+}
 const baseQuery = fetchBaseQuery({
   baseUrl: basseurladmin,
   credentials: "include",
@@ -172,7 +191,7 @@ const baseQueryWithReauth: BaseQueryFn<
 export const adminApi = createApi({
   reducerPath: "adminApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Agent", "Orders", "User"],
+  tagTypes: ["Agent", "Orders", "User","Dashboard"],
   endpoints: (builder) => ({
     adminlogin: builder.mutation<
       {
@@ -277,23 +296,34 @@ export const adminApi = createApi({
       query: (chatId) => `/getmessages/${chatId}`,
     }),
     sendMessage: builder.mutation<
-      void,
-      { chatId: string; content: string; adminToken: string }
-    >({
-      query: ({ chatId, content, adminToken }) => ({
-        url: `/sendmessage`,
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${adminToken}`,
-        },
-        body: { chatId, content },
-      }),
+    SendMessageResponse,
+    { formData: FormData; adminToken: string }
+  >({
+    query: ({ formData, adminToken }) => ({
+      url: '/sendmessage',
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        // Don't set Content-Type - it will be automatically set for FormData
+      },
+      body: formData,
     }),
+  }),
+
     saleslists: builder.query<Agent[], void>({
       query: () => "/saleslists",
     }),
+    admindashboard: builder.query<DashboardData, void>({
+      query: () => ({
+        url: "/admindashboard",
+        method: "GET",
+        credentials: "include",
+      }),
+      providesTags: ["Dashboard"],
+    }),
   }),
-});
+  })
+  
 
 export const {
   useAdminloginMutation,
@@ -308,4 +338,6 @@ export const {
   useGetMessagesQuery,
   useSendMessageMutation,
   useSaleslistsQuery,
+  useAdmindashboardQuery,
+
 } = adminApi;

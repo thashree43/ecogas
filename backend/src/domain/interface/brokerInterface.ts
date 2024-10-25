@@ -1,6 +1,7 @@
 import { Schema, Types } from "mongoose";
 import { Agent, AgentProduct } from "../../domain";
 import { IagentData, IOrderData, IProductDocument, IUserData } from ".././../infrastructure/database";
+import { IDashboardData } from "../../infrastructure/types/interfaces";
 
 export interface IAgentRepository {
   saveagent(agent: Agent): Promise<IagentData>;
@@ -13,4 +14,6 @@ export interface IAgentRepository {
   deleteproduct(id: string | Types.ObjectId): Promise<IProductDocument | null>;
   getordersin(agentId: Types.ObjectId | string): Promise<IagentData | null>;
   updatestatus(id:Types.ObjectId | string):Promise<IOrderData | null>
-  agentgetsales(agentId: string | Types.ObjectId): Promise<IagentData | null>}
+  agentgetsales(agentId: string | Types.ObjectId): Promise<IagentData | null>
+  agentdashboard(agentId: string | Types.ObjectId): Promise<IDashboardData| null>
+}
