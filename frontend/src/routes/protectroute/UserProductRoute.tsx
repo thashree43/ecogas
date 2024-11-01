@@ -1,28 +1,31 @@
-import { useNavigate } from "react-router-dom";
-import { getToken } from "../../token/gettoken";
-import { useEffect } from "react";
+    import { useNavigate } from "react-router-dom";
+    import { getToken } from "../../token/gettoken";
+    import { useEffect, useState } from "react";
 
-interface ProtectedRouteProps {
-  component: React.ComponentType;
-}
-
-const UserProductroute: React.FC<ProtectedRouteProps> = ({
-  component: Component,
-}) => {
-  const navigate = useNavigate();
-  const token = getToken("usertoken");
-
-  useEffect(() => {
-    if (!token) {
-      navigate("/home");
+    interface ProtectedRouteProps {
+        component: React.ComponentType;
     }
-  }, [token, navigate]);
 
-  if (!token) {
-    return null;
-  }
+    const UserProductRoute: React.FC<ProtectedRouteProps> = ({
+        component: Component,
+    }) => {
+        const navigate = useNavigate();
+        const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+        
+        useEffect(() => {
+            const token = getToken("userToken" );
+            console.log("Token in protected route:", token);
+            
+            if (!token) {
+                console.log("No valid token found, redirecting to login");
+                navigate("/");
+                return;
+            }
+            
+            setIsAuthenticated(true);
+        }, [navigate]);
+        
+        return isAuthenticated ? <Component /> : null;
+    };
 
-  return <Component />;
-};
-
-export default UserProductroute;
+    export default UserProductRoute;

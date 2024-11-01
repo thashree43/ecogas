@@ -11,7 +11,7 @@ import {
 import { useDispatch } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import { setUserInfo } from "../../../store/slice/Authslice";
+import { setUserInfo ,setUserToken} from "../../../store/slice/Authslice";
 import { Link, useNavigate } from "react-router-dom";
 import { TokenResponse, useGoogleLogin } from "@react-oauth/google";
 import { ToastContainer, toast } from "react-toastify";
@@ -57,6 +57,8 @@ const LoginComponent: React.FC<LoginPageProps> = ({
       const user = await loginPost({ email, password }).unwrap();
       dispatch(setUserInfo(user));
       localStorage.setItem("userInfo", JSON.stringify(user)); 
+      dispatch(setUserToken(user.token)); // Assuming you have an action to set user token
+
       navigate("/");
       setEmail("");
       setPassword("");
@@ -74,7 +76,9 @@ const LoginComponent: React.FC<LoginPageProps> = ({
           localStorage.setItem("userToken", refreshResult.token);
           const retryRes = await loginPost({ email, password }).unwrap(); 
           console.log("the refreshed token");       
-          dispatch(setUserInfo(retryRes)); 
+          dispatch(setUserInfo(retryRes));          
+           dispatch(setUserToken(retryRes.token)); 
+
           navigate("/"); 
           setEmail("");
           setPassword("");
@@ -93,6 +97,7 @@ const LoginComponent: React.FC<LoginPageProps> = ({
         const response = await googleregister(token.access_token).unwrap();
         dispatch(setUserInfo(response));
         localStorage.setItem("userInfo", JSON.stringify(response));
+        dispatch(setUserToken(response.token));      
         navigate("/");
         setEmail("");
         setPassword("");
@@ -113,6 +118,7 @@ const LoginComponent: React.FC<LoginPageProps> = ({
             const retryRes = await googleregister(token.access_token).unwrap(); 
             console.log("the refreshed token");       
             dispatch(setUserInfo(retryRes.user)); 
+            dispatch(setUserToken(retryRes.token))
             navigate("/");
             setEmail("");
             setPassword("");
@@ -226,7 +232,7 @@ const LoginComponent: React.FC<LoginPageProps> = ({
                 />
                 <span className="ml-2">Remember Me</span>
               </label>
-              <Link to="#" className="hover:text-blue-600">
+              <Link to="/resetpassword" className="hover:text-blue-600">
                 Forgot Password?
               </Link>
             </div>
@@ -263,3 +269,5 @@ const LoginComponent: React.FC<LoginPageProps> = ({
 };
 
 export default LoginComponent;
+
+

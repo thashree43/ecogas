@@ -235,6 +235,7 @@ const BookingProfilePage = () => {
     dispatch(clearUserInfo());
     localStorage.removeItem("userInfo");
     toast.success("logout successfully");
+    Navigate('/')
     };
 
   return (

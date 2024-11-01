@@ -6,31 +6,6 @@
     "auditLog": "logs\\.ed3416c04724c95738f45a285841588e321c3bf2-audit.json",
     "files": [
         {
-            "date": 1728877412825,
-            "name": "logs\\app-2024-10-14.log",
-            "hash": "0b21d4628dc37dac69d07815067d186660dd223c441d0c7630122128025161a3"
-        },
-        {
-            "date": 1728964940440,
-            "name": "logs\\app-2024-10-15.log",
-            "hash": "cef312b6965d77360594550ba94d988dfac3e281fb36095b02374875033e7254"
-        },
-        {
-            "date": 1729050640216,
-            "name": "logs\\app-2024-10-16.log",
-            "hash": "65cbf7b0401b140141808153778e098d0bcfde00f9dcf8bbfdde5b3f721383fa"
-        },
-        {
-            "date": 1729125336647,
-            "name": "logs\\app-2024-10-17.log",
-            "hash": "fd4556570aeaab607554f3c4ebdb253a23afe832347c840709be718969e3a131"
-        },
-        {
-            "date": 1729191515284,
-            "name": "logs\\app-2024-10-18.log",
-            "hash": "41b51ba8f3b4221d210d157775b555dcf0fc6139775d7fea80193a5d409f3ec6"
-        },
-        {
             "date": 1729335087059,
             "name": "logs\\app-2024-10-19.log",
             "hash": "b56311c71ad1a41ce68dd634341b6abd375998d507b4eebe1a733c7921ad005e"
@@ -69,6 +44,21 @@
             "date": 1729881076127,
             "name": "logs\\app-2024-10-26.log",
             "hash": "51f2494ed6ce59d7f6206cb1892e7b418504d5586ef899b7c72be7ba1fc92833"
+        },
+        {
+            "date": 1730260582163,
+            "name": "logs\\app-2024-10-30.log",
+            "hash": "645ed6b0f0a749c199a1691ecc98fc5dcea9d4140b9715b6c5a641950c74caf5"
+        },
+        {
+            "date": 1730349451492,
+            "name": "logs\\app-2024-10-31.log",
+            "hash": "0f0d5367bb8132d31503c4752eb1422b2817e406abc4becd36883458b6e538d6"
+        },
+        {
+            "date": 1730430539809,
+            "name": "logs\\app-2024-11-01.log",
+            "hash": "27913245871277d0babbcb9a28eeacb927aabb2421fb196ca88196c13dda53b4"
         }
     ],
     "hashType": "sha256"

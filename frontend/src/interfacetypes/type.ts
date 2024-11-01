@@ -258,3 +258,10 @@ export interface AdminDashboardData {
   totalAgentCount: number;
   totalOrdersCount: number;
 }
+
+export interface DecodedToken {
+  id: string;
+  email: string;
+  iat: number;
+  exp: number;
+}

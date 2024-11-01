@@ -20,16 +20,29 @@ interface UserInfo {
 
 interface AuthState {
   userInfo: UserInfo | null;
+  token: string | null; // Add token here
+
 }
+interface UserState {
+  token: string | null;
+  userInfo: any; // Define your user info type here
+}
+
 
 const initialState: AuthState = {
   userInfo: JSON.parse(localStorage.getItem('userInfo') || 'null'),
+  token: null
+
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    setUserToken(state, action: PayloadAction<string | null>) {
+      state.token = action.payload;
+    },
+    
     setUserInfo(state, action: PayloadAction<UserInfo>) {
       state.userInfo = action.payload;
       localStorage.setItem('userInfo', JSON.stringify(action.payload));
@@ -43,9 +56,13 @@ const authSlice = createSlice({
       state.userInfo = null;
       localStorage.removeItem('userInfo');
     },
+    clearUserToken(state, action: PayloadAction<string | null>){
+      state.token = null;
+
+    }
   },
 });
 
 
-export const { setUserInfo, clearUserInfo } = authSlice.actions;
+export const { setUserInfo, clearUserInfo ,setUserToken,clearUserToken} = authSlice.actions;
 export default authSlice.reducer;

@@ -43,29 +43,35 @@ const UserRoute: React.FC = () => {
         path="/resetpassword"
         element={
           <UserVerifyroute
-            component={Changepassword}
-          />
+          component={() => (
+            <Mainlayout>
+              <Changepassword/>
+            </Mainlayout>
+          )}          />
         }
       />
       <Route
         path="/updatepassword/:token"
         element={
           <UserVerifyroute
-            component={ResetPasswordForm}
-          />
+          component={() => (
+            <Mainlayout>
+              <ResetPasswordForm/>
+            </Mainlayout>
+          )}           />
         }
       />
       <Route
         path="/book-gas"
         element={
-          
-              <Mainlayout>
-                <GasBookingPage />
-              </Mainlayout>
-            
+            <Mainlayout>
+            <GasBookingPage />
+          </Mainlayout>
         }
       />
-     <Route path="/profile" element={<BookingProfilePage/>}/>
+     <Route path="/profile" element={
+  <BookingProfilePage/>
+     }/>
 
     </Routes>
   );

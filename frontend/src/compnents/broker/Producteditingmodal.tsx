@@ -93,7 +93,6 @@ const ProductEditingForm: React.FC<ProductEditingFormProps> = ({
       };
 
       await onEdit(updatedProduct);
-      toast.success("Product updated successfully");
       refetch();
       closeModal();
     } catch (error) {

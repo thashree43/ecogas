@@ -1,28 +1,31 @@
 import { useNavigate } from "react-router-dom";
 import { getToken } from "../../token/gettoken";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface ProtectedRouteProps {
-  component: React.ComponentType;
+    component: React.ComponentType;
 }
 
-const UserVerifyroute: React.FC<ProtectedRouteProps> = ({
-  component: Component,
+const UserVerifyRoute: React.FC<ProtectedRouteProps> = ({
+    component: Component,
 }) => {
-  const navigate = useNavigate();
-  const token = getToken("usertoken");
-
-  useEffect(() => {
-    if (token) {
-      navigate("/home");
-    }
-  }, [token, navigate]);
-
-  if (token) {
-    return null;
-  }
-
-  return <Component />;
+    const navigate = useNavigate();
+    const [isPublicRoute, setIsPublicRoute] = useState<boolean>(false);
+    
+    useEffect(() => {
+        const token = getToken("userToken");
+        console.log("Token in verify route:", token);
+        
+        if (token) {
+            console.log("Valid token found, redirecting to home");
+            navigate("/home");
+            return;
+        }
+        
+        setIsPublicRoute(true);
+    }, [navigate]);
+    
+    return isPublicRoute ? <Component /> : null;
 };
 
-export default UserVerifyroute;
+export default UserVerifyRoute;
